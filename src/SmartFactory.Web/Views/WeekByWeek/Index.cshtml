@@ -1,0 +1,37 @@
+@model WeekByWeekViewModel
+@{
+    ViewData["Title"] = "Week by week";
+}
+<div class="flex flex-wrap items-end justify-between gap-4">
+    <div><h1>Week by week</h1><p class="text-ink-muted mt-1">Measure × work week · week judgement in moss / amber / ember · @Model.Half.Label</p></div>
+    <form method="get" class="flex items-center gap-2"><label class="caption" for="scope">Scope</label>
+        <select id="scope" name="scope" class="!w-auto" onchange="this.form.submit()">@foreach (var o in Model.ScopeOptions) { <option value="@o.name" selected="@(o.name == Model.Scope)">@o.title</option> }</select></form>
+</div>
+<div class="panel mt-6 overflow-x-auto">
+    @if (Model.Rows.Count == 0)
+    {
+        <p class="text-ink-muted">No active slots for @Model.ScopeTitle yet.</p>
+    }
+    else
+    {
+        <table class="grid-table">
+            <thead><tr><th class="px-2 whitespace-nowrap">@Model.ScopeTitle</th>
+                @foreach (var w in Model.Weeks) { <th scope="col" class="font-display text-center px-2 @(w.Id == Model.Week.Id ? "text-copper-text" : "")">@w.Label</th> }</tr></thead>
+            <tbody>
+            @foreach (var (measure, cells) in Model.Rows)
+            {
+                <tr><th scope="row" class="px-2 whitespace-nowrap max-w-[280px] truncate" title="@measure">@measure</th>
+                    @for (int i = 0; i < cells.Count; i++)
+                    {
+                        var c = cells[i]; var w = Model.Weeks[i];
+                        var key = c is null ? "blank" : (c == Judgement.Met ? "met" : "unmet");
+                        var glyph = c is null ? "·" : (c == Judgement.Met ? "✓" : "×");
+                        <td class="grid-cell cell-@key" tabindex="0" aria-label="@measure @w.Label: @(c is null ? "no entry" : c.ToString())">@glyph</td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+        <p class="caption mt-3">A dot is "no entry yet", not Unmet. Totals live in Team view; this grid is diagnostic.</p>
+    }
+</div>

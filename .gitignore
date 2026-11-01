@@ -1,0 +1,10 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+node_modules/
+*.log
+appsettings.*.local.json
+/src/SmartFactory.Web/wwwroot/css/*.map

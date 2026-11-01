@@ -1,0 +1,14 @@
+@model List<SmartFactory.Core.Audit.AuditEntry>
+@{
+    ViewData["Title"] = "Audit trail";
+    var entity = (string?)ViewBag.Entity; int page = (int)ViewBag.Page;
+}
+<h1>Audit trail</h1>
+<p class="text-ink-muted mt-1">Every change to a definition, approval, lock, result or remark: who, when, old and new value.</p>
+<partial name="_Nav" />
+<form method="get" class="mt-6 flex flex-wrap gap-2 items-end"><label class="block"><span class="label text-ink-muted">Entity</span><select name="entity" class="mt-1 !w-auto"><option value="">All</option>@foreach (var e in new[] { "Kra", "KraSlot", "WeeklyResult", "MonthlyManualValue", "Remark", "Person", "Position", "RatingBasis", "TopGoalLine", "RoleAssignment", "PositionTemplate", "FiscalHalf" }) { <option value="@e" selected="@(e == entity)">@e</option> }</select></label><button class="btn btn-secondary btn-sm" type="submit">Filter</button></form>
+<div class="mt-4 overflow-x-auto"><table class="data-table caption">
+    <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Entity</th><th>Field</th><th>Old</th><th>New</th><th>Detail</th></tr></thead>
+    <tbody>@foreach (var a in Model) { <tr><td class="whitespace-nowrap text-ink">@a.At.ToString("dd MMM yyyy HH:mm:ss")</td><td>@a.ActorName</td><td>@a.Action</td><td>@a.Entity @a.EntityId</td><td>@a.Field</td><td>@a.OldValue</td><td class="text-ink">@a.NewValue</td><td>@a.Detail</td></tr> }</tbody>
+</table></div>
+<div class="mt-4 flex gap-2">@if (page > 1) { <a class="btn btn-ghost btn-sm" href="/admin/audit?entity=@entity&page=@(page - 1)">Newer</a> }@if (Model.Count == 100) { <a class="btn btn-ghost btn-sm" href="/admin/audit?entity=@entity&page=@(page + 1)">Older</a> }</div>

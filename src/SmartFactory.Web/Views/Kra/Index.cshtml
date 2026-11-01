@@ -1,0 +1,194 @@
+@model KraPageViewModel
+@{
+    ViewData["Title"] = Model.IsOwner ? "My KRA" : $"{Model.Owner.Name} · KRA";
+    var kra = Model.Kra; var ev = Model.Evaluation;
+    var (total, ok) = KraService.WeightCheck(kra);
+    var months = Model.Half.Months;
+    var canEdit = Model.CanEdit;
+    var aggs = Enum.GetValues<Aggregation>(); var rules = Enum.GetValues<WeeklyRule>();
+}
+<div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1>@(Model.IsOwner ? "My KRA" : Model.Owner.Name)</h1>
+        <p class="text-ink-muted mt-1">@Model.Owner.Position?.Title · @Model.Owner.Position?.Section?.Name · @Model.Half.Label</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <partial name="_ModeBadge" model="kra" />
+        @if (kra.Status == ApprovalStatus.Submitted) {<span class="chip chip-open">Waiting for approval</span>}
+        @if (kra.Status == ApprovalStatus.Returned) {<span class="chip chip-unmet">Returned</span>}
+        @if (kra.UnlockRequested) {<span class="chip chip-open">Unlock requested</span>}
+        @if (kra.Frozen) {<span class="chip chip-none">Frozen</span>}
+    </div>
+</div>
+
+@if (kra.Status == ApprovalStatus.Returned && kra.ReturnComment is not null)
+{
+    <div class="flash flash-error mt-6" role="alert"><strong>Returned by your superior:</strong> @kra.ReturnComment</div>
+}
+
+<section class="mt-6 grid gap-4 md:grid-cols-3">
+    <div class="card">
+        <div class="caption">Weight check</div>
+        <div class="number-l @(ok ? "text-moss" : "text-ember")" data-weight-total>@total.ToString("0.###")%</div>
+        <div class="caption mt-1" data-weight-note>@(ok ? "Weights total 100%." : total > 100 ? $"Excess of {(total - 100):0.###}% to remove." : $"Shortfall of {(100 - total):0.###}% to add.")</div>
+    </div>
+    <div class="card">
+        <div class="caption">Active slots</div>
+        <div class="number-l">@kra.Slots.Count(s => s.IsActive)<span class="text-ink-muted text-[20px]"> of 20</span></div>
+        <div class="caption mt-1">A slot is active when its measure is non-empty.</div>
+    </div>
+    <div class="card">
+        <div class="caption">Approval</div>
+        <div class="mt-1">
+            @if (kra.Mode == DefinitionMode.Locked) { <span>Approved by <strong>@kra.ApprovedByName</strong> on @Fmt.Date(kra.ApprovedAt!.Value), version @kra.Version.</span> }
+            else if (kra.Status == ApprovalStatus.Submitted) { <span>Submitted @Fmt.Date(kra.SubmittedAt!.Value); waiting for your superior.</span> }
+            else { <span class="text-ink-muted">In SETUP. Fill the slots, bring the weights to 100%, then submit.</span> }
+        </div>
+    </div>
+</section>
+
+@if (canEdit)
+{
+    <form method="post" action="/kra/save" class="mt-8" id="kra-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="KraId" value="@kra.Id" />
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2>Slots</h2>
+            <div class="flex gap-2">
+                <button type="submit" class="btn btn-primary">Save KRA</button>
+                <button type="submit" form="submit-form" class="btn btn-secondary" data-needs-100 @(ok ? "" : "disabled")>Submit for approval</button>
+            </div>
+        </div>
+        <p class="caption mt-1">Every slot points to one of the 16 company Top Goal lines. No slot may measure a result you cannot influence; projects are initiatives, never % complete KPIs.</p>
+        <div class="mt-4 space-y-3">
+            @{ int i = 0; }
+            @foreach (var slot in kra.Slots.OrderBy(s => s.SlotNumber))
+            {
+                var idx = i++;
+                var open = slot.IsActive || slot.Retired;
+                <div class="card" data-slot-row>
+                    <input type="hidden" name="Slots[@idx].SlotNumber" value="@slot.SlotNumber" />
+                    <div class="grid gap-3 md:grid-cols-[48px_1fr_1fr_120px_auto] items-start">
+                        <div class="number-m text-ink-muted pt-1">@slot.SlotNumber</div>
+                        <label class="block"><span class="label text-ink-muted">Measure</span><input name="Slots[@idx].Measure" value="@slot.Measure" class="mt-1" data-measure placeholder="Empty = inactive slot" /></label>
+                        <label class="block"><span class="label text-ink-muted">Top Goal line</span>
+                            <select name="Slots[@idx].TopGoalLineId" class="mt-1">
+                                <option value="">— choose —</option>
+                                @foreach (var t in Model.TopGoalLines) { <option value="@t.Id" selected="@(slot.TopGoalLineId == t.Id)">@t.Measure · @t.StrategicObjective</option> }
+                            </select></label>
+                        <label class="block"><span class="label text-ink-muted">Weight %</span><input name="Slots[@idx].Weight" value="@slot.Weight.ToString("0.###")" class="mt-1" inputmode="decimal" data-weight /></label>
+                        <button type="button" class="btn btn-ghost btn-sm mt-6" data-toggle="slot-@slot.SlotNumber" aria-expanded="@(open ? "true" : "false")">Details</button>
+                    </div>
+                    <div id="slot-@slot.SlotNumber" class="@(open ? "" : "hidden") mt-4 grid gap-3 md:grid-cols-4">
+                        <label class="block"><span class="label text-ink-muted">Target (text)</span><input name="Slots[@idx].TargetText" value="@slot.TargetText" class="mt-1" /></label>
+                        <label class="block"><span class="label text-ink-muted">Rating basis</span>
+                            <select name="Slots[@idx].RatingBasisId" class="mt-1"><option value="">— choose —</option>
+                                @foreach (var b in Model.RatingBases) { <option value="@b.Id" selected="@(slot.RatingBasisId == b.Id)">@b.Key · @b.Mode · @b.Name</option> }
+                            </select></label>
+                        <label class="block"><span class="label text-ink-muted">Aggregation</span>
+                            <select name="Slots[@idx].Aggregation" class="mt-1">@foreach (var a in aggs) { <option value="@a" selected="@(slot.Aggregation == a)">@a</option> }</select></label>
+                        <label class="block"><span class="label text-ink-muted">Weekly target rule</span>
+                            <select name="Slots[@idx].WeeklyRule" class="mt-1">@foreach (var r in rules) { <option value="@r" selected="@(slot.WeeklyRule == r)">@r</option> }</select></label>
+                        <label class="block"><span class="label text-ink-muted">Start value</span><input name="Slots[@idx].StartValue" value="@Fmt.Plain(slot.StartValue)" class="mt-1" inputmode="decimal" /></label>
+                        @for (int m = 1; m <= 6; m++)
+                        {
+                            <label class="block"><span class="label text-ink-muted">Plan @months[m - 1].Label</span><input name="Slots[@idx].Plans[@(m - 1)]" value="@Fmt.Plain(slot.PlanFor(m))" class="mt-1" inputmode="decimal" /></label>
+                        }
+                        <label class="block md:col-span-2"><span class="label text-ink-muted">Departmental goal / measure</span><input name="Slots[@idx].DepartmentalGoal" value="@slot.DepartmentalGoal" class="mt-1" placeholder="Goal" /><input name="Slots[@idx].DepartmentalMeasure" value="@slot.DepartmentalMeasure" class="mt-1" placeholder="Measure" /></label>
+                        <label class="block md:col-span-2"><span class="label text-ink-muted">Sectional goal / measure</span><input name="Slots[@idx].SectionalGoal" value="@slot.SectionalGoal" class="mt-1" placeholder="Goal" /><input name="Slots[@idx].SectionalMeasure" value="@slot.SectionalMeasure" class="mt-1" placeholder="Measure" /></label>
+                        <label class="block md:col-span-3"><span class="label text-ink-muted">Notes</span><input name="Slots[@idx].Notes" value="@slot.Notes" class="mt-1" /></label>
+                        <label class="flex items-center gap-2 mt-6"><input type="checkbox" name="Slots[@idx].Retired" value="true" class="w-4 h-4" data-retired @(slot.Retired ? "checked" : "") /> <span>Retired (keeps its history)</span></label>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="mt-4 flex gap-2"><button type="submit" class="btn btn-primary">Save KRA</button></div>
+    </form>
+    <form method="post" action="/kra/submit" id="submit-form">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@kra.Id" /></form>
+}
+else
+{
+    <section class="mt-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2>Slots</h2>
+            @if (Model.IsOwner && kra.Mode == DefinitionMode.Locked && !kra.UnlockRequested && !kra.Frozen)
+            {
+                <button type="button" class="btn btn-secondary" data-toggle="unlock-form" aria-expanded="false">Request unlock</button>
+            }
+            @if (Model.IsSuperior)
+            {
+                <a class="btn btn-secondary" href="/approvals#kra-@kra.Id">Open in Approvals</a>
+            }
+        </div>
+        @if (Model.IsOwner && kra.Mode == DefinitionMode.Locked)
+        {
+            <form id="unlock-form" method="post" action="/kra/request-unlock" class="hidden card mt-3 space-y-3">
+                @Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@kra.Id" />
+                <p class="caption">Prefer changing a target or rating basis. To change a measure's meaning, retire the slot and open a new one so weekly history stays truthful.</p>
+                <label class="block"><span class="label text-ink-muted">Why unlock?</span><textarea name="reason" rows="2" class="mt-1" required></textarea></label>
+                <button class="btn btn-secondary" type="submit">Send request</button>
+            </form>
+        }
+        <div class="mt-4 overflow-x-auto">
+            <table class="data-table min-w-[900px]">
+                <thead><tr><th>No.</th><th>Measure</th><th>Top Goal line</th><th>Target</th><th class="text-right">Weight</th><th>Basis</th><th>Agg · rule</th>@foreach (var m in months) {<th class="text-center">@m.Label[..3]</th>}<th class="text-center">2H</th></tr></thead>
+                <tbody>
+                @foreach (var s in ev.ActiveSlots)
+                {
+                    <tr>
+                        <td class="sf-num text-ink-muted">@s.Slot.SlotNumber</td>
+                        <td><div class="font-medium">@s.Slot.Measure</div>@if (s.Slot.Notes is not null) {<div class="caption">@s.Slot.Notes</div>}</td>
+                        <td class="caption">@s.Slot.TopGoalLine?.Measure<br/>@s.Slot.TopGoalLine?.StrategicObjective</td>
+                        <td class="caption">@s.Slot.TargetText</td>
+                        <td class="text-right sf-num">@s.Slot.Weight.ToString("0.##")%</td>
+                        <td class="caption">@s.Slot.RatingBasis?.Key</td>
+                        <td class="caption">@s.Slot.Aggregation · @s.Slot.WeeklyRule</td>
+                        @foreach (var m in months)
+                        {
+                            var me = s.Month(m.Index);
+                            <td class="text-center"><partial name="_Rating" model="((decimal?)me?.Rating, 0, me?.Provisional ?? false)" /></td>
+                        }
+                        <td class="text-center"><partial name="_Rating" model="(s.HalfRating, 2, false)" /></td>
+                    </tr>
+                }
+                </tbody>
+                <tfoot><tr><td colspan="4" class="font-medium">Total</td><td class="text-right sf-num">@total.ToString("0.##")%</td><td></td><td></td>
+                    @foreach (var t in ev.MonthTotals) {<td class="text-center"><partial name="_Rating" model="(t.Total, 2, t.Provisional)" /></td>}
+                    <td class="text-center"><partial name="_Rating" model="(ev.HalfPerformance, 2, false)" /></td></tr></tfoot>
+            </table>
+        </div>
+        @if (ev.Slots.Any(s => s.Slot.Retired))
+        {
+            <p class="caption mt-3">Retired slots (history kept): @string.Join(", ", ev.Slots.Where(s => s.Slot.Retired).Select(s => $"{s.Slot.SlotNumber} {s.Slot.Measure}"))</p>
+        }
+    </section>
+}
+
+<section class="mt-10 grid gap-6 lg:grid-cols-2">
+    <div class="panel">
+        <h2>Version history</h2>
+        @if (kra.Versions.Count == 0) { <p class="text-ink-muted mt-2">No version locked yet.</p> }
+        else
+        {
+            <ul class="mt-3 space-y-2">
+                @foreach (var v in kra.Versions.OrderByDescending(v => v.Version))
+                {
+                    <li class="well"><strong>v@(v.Version)</strong> · approved by @v.ApprovedByName · @Fmt.Date(v.ApprovedAt)@(v.Note is null ? "" : $" · {v.Note}")</li>
+                }
+            </ul>
+        }
+    </div>
+    <div class="panel">
+        <h2>Change trail</h2>
+        @if (Model.Trail.Count == 0) { <p class="text-ink-muted mt-2">No changes recorded yet.</p> }
+        else
+        {
+            <ul class="mt-3 space-y-1 max-h-[360px] overflow-auto caption">
+                @foreach (var a in Model.Trail)
+                {
+                    <li><span class="text-ink">@Fmt.Date(a.At)</span> · @a.ActorName · @a.Action @a.Entity @a.EntityId@(a.Field is null ? "" : $" · {a.Field}: {a.OldValue ?? "blank"} → {a.NewValue ?? "blank"}")@(a.Detail is null ? "" : $" · {a.Detail}")</li>
+                }
+            </ul>
+        }
+    </div>
+</section>

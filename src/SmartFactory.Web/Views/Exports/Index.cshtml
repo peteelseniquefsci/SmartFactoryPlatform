@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Exports";
+    var half = (FiscalHalf)ViewBag.Half; var halves = (List<FiscalHalf>)ViewBag.Halves; var evals = (List<KraEvaluation>)ViewBag.Evals; var today = (DateOnly)ViewBag.Today;
+    var ended = today > half.EndDate;
+}
+<div class="flex flex-wrap items-end justify-between gap-4">
+    <div><h1>Exports</h1><p class="text-ink-muted mt-1">Half-year Target Indices export for HR: one Excel file per person plus one consolidated file · @half.Label</p></div>
+    <form method="get" class="flex items-center gap-2"><label class="caption" for="half">Half</label><select id="half" name="half" class="!w-auto" onchange="this.form.submit()">@foreach (var h in halves) { <option value="@h.Id" selected="@(h.Id == half.Id)">@h.Label</option> }</select></form>
+</div>
+@if (!ended)
+{
+    <div class="flash flash-ok mt-6 !border-amber !bg-amber-soft !text-amber" role="status">@half.Label ends @Fmt.Date(half.EndDate). Exports before then carry the ratings entered so far; months not yet closed show as provisional on screen and as their current rating in the file.</div>
+}
+<div class="mt-6 flex flex-wrap gap-3">
+    <a class="btn btn-primary" href="/exports/consolidated?half=@half.Id">Download consolidated file</a>
+    <a class="btn btn-secondary" href="/exports/all?half=@half.Id">Download all per-person files (zip)</a>
+</div>
+<div class="mt-6 overflow-x-auto">
+    <table class="data-table">
+        <thead><tr><th>Person</th><th>Position</th><th>KRA</th>@foreach (var m in half.Months) {<th class="text-center">@m.Label[..3]</th>}<th class="text-center">2H</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var e in evals)
+        {
+            <tr><td class="font-medium">@e.Kra.Person?.Name</td><td class="caption">@e.Kra.Person?.Position?.Title</td><td><partial name="_ModeBadge" model="e.Kra" /></td>
+                @foreach (var t in e.MonthTotals) {<td class="text-center"><partial name="_Rating" model="(t.Total, 2, t.Provisional)" /></td>}
+                <td class="text-center"><partial name="_Rating" model="(e.HalfPerformance, 2, false)" /></td>
+                <td class="text-right"><a class="btn btn-ghost btn-sm" href="/exports/person/@e.Kra.PersonId?half=@half.Id">Download</a></td></tr>
+        }
+        </tbody>
+    </table>
+</div>

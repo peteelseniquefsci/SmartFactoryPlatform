@@ -1,0 +1,7 @@
+@model (Judgement? judgement, string? label)
+@{
+    var key = Fmt.JudgementKey(Model.judgement);
+    var text = Model.judgement is null ? "—" : Fmt.Judgement(Model.judgement);
+    var glyph = Model.judgement switch { Judgement.Met => "✓", Judgement.Unmet => "×", _ => "" };
+}
+<span class="chip chip-@(Model.judgement is null ? "none" : key)" role="status" aria-label="@(Model.label is null ? "" : Model.label + ": ")@(Model.judgement is null ? "no judgement" : text)">@if (glyph != "") {<span class="font-bold">@glyph</span>}<span>@text</span>@if (Model.label is not null) {<span class="font-normal">· @Model.label</span>}</span>

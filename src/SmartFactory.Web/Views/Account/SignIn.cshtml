@@ -1,0 +1,55 @@
+@{
+    Layout = null;
+    var isDev = (bool)ViewBag.IsDevelopment;
+    var people = ViewBag.People as List<Person>;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in · Smart Factory Platform</title>
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <script>try{if(localStorage.getItem('sf-theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
+</head>
+<body class="min-h-screen flex items-center justify-center px-6">
+<div class="w-full max-w-md">
+    <div class="mb-8">
+        <svg viewBox="0 0 360 64" width="360" height="64" aria-hidden="true" class="max-w-full h-auto">
+            @for (int i = 0; i < 14; i++)
+            {
+                <rect x="@(8 + i * 24)" y="@(56 - 4 * (i + 1))" width="16" height="@(4 * (i + 1))" rx="4" fill="var(--sf-surface-raised)" />
+            }
+            <rect x="320" y="12" width="16" height="16" rx="8" fill="var(--sf-copper)" />
+        </svg>
+        <h1 class="mt-4">Smart Factory Platform</h1>
+        <p class="text-ink-muted mt-1">Progress as a shared climb, not a score imposed from above.</p>
+    </div>
+    @if (TempData["Error"] is string err)
+    {
+        <div class="flash flash-error" role="alert">@err</div>
+    }
+    <form method="post" action="/account/sign-in" class="panel space-y-4">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+        @if (isDev && people is not null)
+        {
+            <p class="caption">Development sign-in: pick a seeded person. Production signs in through the company LDAP API.</p>
+            <label class="block"><span class="label text-ink-muted">Person</span>
+                <select name="username" class="mt-1">
+                    @foreach (var p in people)
+                    {
+                        <option value="@p.EmployeeId">@p.Name · @p.Position?.Title</option>
+                    }
+                </select>
+            </label>
+        }
+        else
+        {
+            <label class="block"><span class="label text-ink-muted">Employee id</span><input name="username" class="mt-1" autocomplete="username" required /></label>
+            <label class="block"><span class="label text-ink-muted">Password</span><input name="password" type="password" class="mt-1" autocomplete="current-password" required /></label>
+        }
+        <button class="btn btn-primary w-full justify-center" type="submit">Sign in</button>
+    </form>
+</div>
+</body>
+</html>

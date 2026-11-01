@@ -1,0 +1,94 @@
+@{
+    ViewData["Title"] = "Approvals";
+    var half = (FiscalHalf)ViewBag.Half; var today = (DateOnly)ViewBag.Today; var firstWeekEnd = (DateOnly)ViewBag.FirstWeekEnd;
+    var waiting = (List<Kra>)ViewBag.Waiting; var unlocks = (List<Kra>)ViewBag.Unlocks; var never = (List<Kra>)ViewBag.NeverLocked; var locked = (List<Kra>)ViewBag.Locked;
+    var trail = (List<SmartFactory.Core.Audit.AuditEntry>)ViewBag.Trail; var trailKra = ViewBag.TrailKra as Kra;
+}
+<h1>Approvals</h1>
+<p class="text-ink-muted mt-1">KRAs waiting for approval, unlock requests and the change trail · @half.Label. Review slots against the Top Goal lines and the position; you cannot edit a subordinate's definitions directly.</p>
+
+<section class="mt-8">
+    <h2>Waiting for approval <span class="text-ink-muted">(@waiting.Count)</span></h2>
+    @if (waiting.Count == 0) { <p class="text-ink-muted mt-2">Nothing waiting. Submitted KRAs appear here.</p> }
+    <div class="mt-3 space-y-3">
+        @foreach (var k in waiting)
+        {
+            var (total, ok) = KraService.WeightCheck(k);
+            <div class="card" id="kra-@k.Id">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div><div class="font-medium">@k.Person?.Name</div><div class="caption">@k.Person?.Position?.Title · submitted @Fmt.Date(k.SubmittedAt!.Value) · @k.Slots.Count(s => s.IsActive) slots · weights <span class="@(ok ? "text-moss" : "text-ember")">@total.ToString("0.##")%</span></div></div>
+                    <div class="flex items-center gap-2"><partial name="_ModeBadge" model="k" /><a class="btn btn-ghost btn-sm" href="/kra/person/@k.Person?.Id">Review slots</a></div>
+                </div>
+                <ul class="mt-3 grid gap-1 md:grid-cols-2 caption">
+                    @foreach (var s in k.Slots.Where(s => s.IsActive).OrderBy(s => s.SlotNumber)) { <li>@s.SlotNumber · <span class="text-ink">@s.Measure</span> · @s.Weight.ToString("0.##")% · @s.TopGoalLine?.Measure · @s.RatingBasis?.Key</li> }
+                </ul>
+                <div class="mt-4 grid gap-3 md:grid-cols-2">
+                    <form method="post" action="/approvals/approve" class="flex gap-2 items-end">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" />
+                        <label class="block flex-1"><span class="label text-ink-muted">Note (optional)</span><input name="note" class="mt-1" /></label>
+                        <button class="btn btn-primary" type="submit" @(ok ? "" : "disabled") title="@(ok ? "" : "Weights must total 100%")">Approve and lock</button></form>
+                    <form method="post" action="/approvals/return" class="flex gap-2 items-end">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" />
+                        <label class="block flex-1"><span class="label text-ink-muted">Return with comments</span><input name="comment" class="mt-1" required /></label>
+                        <button class="btn btn-secondary" type="submit">Return</button></form>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="mt-10">
+    <h2>Unlock requests <span class="text-ink-muted">(@unlocks.Count)</span></h2>
+    @if (unlocks.Count == 0) { <p class="text-ink-muted mt-2">No unlock requests.</p> }
+    <div class="mt-3 space-y-3">
+        @foreach (var k in unlocks)
+        {
+            <div class="card flex flex-wrap items-start justify-between gap-3" id="kra-@k.Id">
+                <div><div class="font-medium">@k.Person?.Name</div><div class="caption">@k.Person?.Position?.Title · requested @Fmt.Date(k.UnlockRequestedAt!.Value)</div><p class="mt-2">@k.UnlockReason</p></div>
+                <div class="flex gap-2">
+                    <form method="post" action="/approvals/unlock">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><button class="btn btn-secondary" type="submit">Unlock</button></form>
+                    <form method="post" action="/approvals/decline-unlock">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><button class="btn btn-ghost" type="submit">Keep locked</button></form>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="mt-10">
+    <h2>Not locked yet <span class="text-ink-muted">(@never.Count)</span></h2>
+    <p class="caption mt-1">A KRA with no version locked by the end of the first week of the half (@Fmt.Date(firstWeekEnd)) is flagged@(today > firstWeekEnd ? " — that date has passed." : ".")</p>
+    @if (never.Count == 0) { <p class="text-ink-muted mt-2">Everyone beneath you has a locked KRA.</p> }
+    <ul class="mt-3 space-y-2">
+        @foreach (var k in never)
+        {
+            <li class="well flex flex-wrap items-center justify-between gap-2"><span><span class="text-ink">@k.Person?.Name</span> · @k.Person?.Position?.Title · @(k.Status == ApprovalStatus.Returned ? "returned, being changed" : "in SETUP")</span>@if (today > firstWeekEnd) {<span class="chip chip-unmet">No version locked</span>}</li>
+        }
+    </ul>
+</section>
+
+<section class="mt-10">
+    <h2>Locked KRAs <span class="text-ink-muted">(@locked.Count)</span></h2>
+    <div class="mt-3 overflow-x-auto">
+        <table class="data-table">
+            <thead><tr><th>Person</th><th>Version</th><th>Approved</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var k in locked)
+            {
+                <tr id="kra-@k.Id"><td><a href="/kra/person/@k.Person?.Id" class="text-ink">@k.Person?.Name</a><div class="caption">@k.Person?.Position?.Title</div></td><td>v@(k.Version)</td><td class="caption">@k.ApprovedByName · @Fmt.Date(k.ApprovedAt!.Value)</td>
+                    <td class="flex gap-2 justify-end">
+                        <a class="btn btn-ghost btn-sm" href="/approvals?trail=@k.Id#trail">Change trail</a>
+                        <form method="post" action="/approvals/unlock" class="flex gap-2">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><input name="reason" placeholder="Reason" class="!w-40" required /><button class="btn btn-secondary btn-sm" type="submit">Unlock</button></form>
+                    </td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if (trailKra is not null)
+{
+    <section class="mt-10 panel" id="trail">
+        <h2>Change trail · @trailKra.Person?.Name</h2>
+        <ul class="mt-3 space-y-1 caption max-h-[480px] overflow-auto">
+            @foreach (var a in trail) { <li><span class="text-ink">@a.At.ToString("dd MMM yyyy HH:mm")</span> · @a.ActorName · @a.Action @a.Entity @a.EntityId@(a.Field is null ? "" : $" · {a.Field}: {a.OldValue ?? "blank"} → {a.NewValue ?? "blank"}")@(a.Detail is null ? "" : $" · {a.Detail}")</li> }
+        </ul>
+    </section>
+}

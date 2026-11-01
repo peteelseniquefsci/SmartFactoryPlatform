@@ -1,0 +1,8 @@
+@model (MonthStatus status, string? label)
+@{
+    var key = Fmt.StatusKey(Model.status);
+    var text = Fmt.Status(Model.status);
+    var glyph = Model.status switch { MonthStatus.Met => "✓", MonthStatus.Unmet => "×", _ => "" };
+    var aria = (Model.label is null ? "" : Model.label + ": ") + (Model.status == MonthStatus.Open ? "undecided" : text);
+}
+<span class="chip chip-@key" role="status" aria-label="@aria">@if (glyph != "") {<span class="font-bold">@glyph</span>}<span>@text</span>@if (Model.label is not null) {<span class="font-normal">· @Model.label</span>}</span>

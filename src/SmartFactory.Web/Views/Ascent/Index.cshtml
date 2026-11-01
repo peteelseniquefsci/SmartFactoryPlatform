@@ -1,0 +1,84 @@
+@model AscentViewModel
+@{
+    ViewData["Title"] = "Ascent";
+    var thisMonth = Model.ThisWeek.FiscalMonth!;
+    var perf = Model.Mine?.HalfPerformance;
+    var ring = perf is null ? 0 : (double)Math.Min(5m, perf.Value) / 5.0;
+    var circ = 2 * Math.PI * 52;
+}
+<div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1>Ascent</h1>
+        <p class="text-ink-muted mt-1">@Fmt.Date(Model.Today) · @Model.ThisWeek.Label (@Fmt.Range(Model.ThisWeek.StartDate, Model.ThisWeek.EndDate)) · @thisMonth.Label · @Model.Half.Label</p>
+    </div>
+    @if (Model.PendingApprovals > 0)
+    {
+        <a class="btn btn-secondary" href="/approvals">@Model.PendingApprovals waiting in Approvals</a>
+    }
+</div>
+
+<section class="mt-8 grid gap-6 xl:grid-cols-2 min-w-0" aria-label="The two company Scores">
+    @if (Model.Compliance is not null)
+    {
+        <partial name="_RampChart" model='(Model.Compliance, Model.Half, Model.ThisWeek, (string)"Compliance Score")' />
+    }
+    @if (Model.Factory is not null)
+    {
+        <partial name="_RampChart" model='(Model.Factory, Model.Half, Model.ThisWeek, (string)"Factory Score")' />
+    }
+    @if (Model.Compliance is null && Model.Factory is null)
+    {
+        <div class="panel xl:col-span-2">
+            <h2>No company Scores yet</h2>
+            <p class="text-ink-muted mt-2">The Compliance and Factory Score slots live on the Smart Factory Manager's KRA. Lock that KRA to see the climb here.</p>
+        </div>
+    }
+</section>
+
+<section class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)] items-start" aria-label="Your half-year">
+    <div class="panel flex items-center gap-6">
+        <svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Your 2H rating @(perf is null ? "not yet rated" : Fmt.Num(perf, 2)) of 5">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--sf-hairline)" stroke-width="8" />
+            <circle cx="60" cy="60" r="52" fill="none" stroke="@(perf is not null && perf < 3 ? "var(--sf-ember)" : "var(--sf-cyan)")" stroke-width="8" stroke-linecap="round"
+                    stroke-dasharray="@circ.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" stroke-dashoffset="@((circ * (1 - ring)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" transform="rotate(-90 60 60)" />
+            @Svg.Text(60, 66, perf is null ? "—" : perf.Value.ToString("0.00"), fill: "var(--sf-ink)", size: 24, anchor: "middle", family: "var(--font-display)", weight: "700")
+        </svg>
+        <div>
+            <h2>Your 2H rating</h2>
+            <p class="caption mt-1">Average of the monthly ratings entered so far, weighted by slot. 3.00 means every target met; 5.00 is the ceiling.</p>
+            @if (Model.Mine is not null)
+            {
+                <p class="mt-2"><partial name="_ModeBadge" model="Model.Mine.Kra" /></p>
+            }
+            <a class="btn btn-secondary btn-sm mt-3" href="/week">Enter this week</a>
+        </div>
+    </div>
+    <div class="panel">
+        <h2>Months of @Model.Half.Label</h2>
+        <p class="caption mt-1">Status of your own KRA by month: Met when every slot that can conclude has, Unmet when any slot is Unmet, — while the month can still move.</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+            @foreach (var m in Model.Half.Months)
+            {
+                var statuses = Model.MineWeekly?.ActiveSlots.Select(s => s.Month(m.Index)?.Status ?? MonthStatus.None).ToList() ?? new List<MonthStatus>();
+                var status = statuses.Count == 0 || statuses.All(s => s == MonthStatus.None) ? MonthStatus.None
+                    : statuses.Any(s => s == MonthStatus.Unmet) ? MonthStatus.Unmet
+                    : statuses.Where(s => s != MonthStatus.None).All(s => s == MonthStatus.Met) ? MonthStatus.Met : MonthStatus.Open;
+                if (m.Index > thisMonth.Index) { status = MonthStatus.None; }
+                var fiscal = $"{Model.Half.Label} · {m.Year}";
+                <partial name="_MonthChip" model='((string)m.Label[..3], fiscal, status, m.Id == thisMonth.Id, (string?)$"/week?week={m.Weeks.First().Label}")' />
+            }
+        </div>
+        @if (Model.Mine is not null)
+        {
+            <div class="mt-4 flex flex-wrap gap-2">
+                @foreach (var t in Model.Mine.MonthTotals)
+                {
+                    <div class="well text-center min-w-[96px] flex-1">
+                        <div class="caption">@t.Month.Label[..3] total</div>
+                        <partial name="_Rating" model="(t.Total, 2, t.Provisional)" />
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>

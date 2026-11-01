@@ -1,0 +1,5 @@
+@model Kra
+@{
+    var locked = Model.Mode == DefinitionMode.Locked;
+}
+<span class="mode @(locked ? "mode-locked" : "")">@(locked ? "LOCKED" : "SETUP")@if (locked) {<span class="font-normal tracking-normal text-ink-muted">· v@(Model.Version) · @Model.ApprovedByName@(Model.ApprovedAt is null ? "" : " · " + Fmt.Date(Model.ApprovedAt.Value))</span>}</span>

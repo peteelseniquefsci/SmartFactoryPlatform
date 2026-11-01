@@ -1,0 +1,10 @@
+@model (decimal? value, int decimals, bool provisional)
+@if (Model.value is null)
+{
+    <span class="rating rating-blank">—</span>
+}
+else
+{
+    var low = Model.value < 3;
+    <span class="rating @(low ? "rating-low" : "") @(Model.provisional ? "rating-provisional" : "")">@Model.value.Value.ToString("F" + Model.decimals, System.Globalization.CultureInfo.InvariantCulture)@if (Model.provisional) {<span class="rating-note">provisional</span>}</span>
+}

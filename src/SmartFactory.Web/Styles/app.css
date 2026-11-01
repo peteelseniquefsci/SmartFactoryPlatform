@@ -1,0 +1,139 @@
+/* Smart Factory Platform — Tailwind v4 theme built from the design-system tokens (claude.ai/artifact/Sav29QZzgwyTQrSFde3ujy).
+   Build: npm run css (output committed to wwwroot/css/app.css so the LAN deployment needs no npm). */
+@import "tailwindcss";
+@import "./fonts.css";
+@source "../Views";
+@source "../Controllers";
+
+/* Raw token values per theme. Midnight is the default; Light is opt-in via data-theme="light". */
+:root {
+  --sf-surface: #0b1026; --sf-surface-raised: #151c3a; --sf-surface-sunken: #070b1c;
+  --sf-hairline: #2a3358; --sf-border-strong: #6b7599;
+  --sf-ink: #eef1fa; --sf-ink-muted: #a9b1cc; --sf-ink-faint: #6c7699;
+  --sf-copper: #f2a65a; --sf-on-copper: #0b1026; --sf-copper-text: #f2a65a;
+  --sf-cyan: #58d7ff; --sf-on-cyan: #0b1026; --sf-cyan-text: #58d7ff;
+  --sf-focus: #58d7ff;
+  --sf-moss: #7cd49a; --sf-moss-soft: #16342a;
+  --sf-amber: #f5c451; --sf-amber-soft: #3a2e12;
+  --sf-ember: #ff7b6f; --sf-ember-soft: #40201f;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --sf-surface: #f6f7fb; --sf-surface-raised: #ffffff; --sf-surface-sunken: #ebeef6;
+  --sf-hairline: #d5dae8; --sf-border-strong: #7a849f;
+  --sf-ink: #0b1026; --sf-ink-muted: #4f5878; --sf-ink-faint: #8a92ab;
+  --sf-copper-text: #8a4f0f; --sf-cyan-text: #0a6e8e; --sf-focus: #0a6e8e;
+  --sf-moss: #1e7b48; --sf-moss-soft: #ddf3e4;
+  --sf-amber: #8a6200; --sf-amber-soft: #fbefcb;
+  --sf-ember: #b4281e; --sf-ember-soft: #faddd9;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-surface: var(--sf-surface);
+  --color-surface-raised: var(--sf-surface-raised);
+  --color-surface-sunken: var(--sf-surface-sunken);
+  --color-hairline: var(--sf-hairline);
+  --color-border-strong: var(--sf-border-strong);
+  --color-ink: var(--sf-ink);
+  --color-ink-muted: var(--sf-ink-muted);
+  --color-ink-faint: var(--sf-ink-faint);
+  --color-copper: var(--sf-copper);
+  --color-on-copper: var(--sf-on-copper);
+  --color-copper-text: var(--sf-copper-text);
+  --color-cyan: var(--sf-cyan);
+  --color-on-cyan: var(--sf-on-cyan);
+  --color-cyan-text: var(--sf-cyan-text);
+  --color-focus: var(--sf-focus);
+  --color-moss: var(--sf-moss);
+  --color-moss-soft: var(--sf-moss-soft);
+  --color-amber: var(--sf-amber);
+  --color-amber-soft: var(--sf-amber-soft);
+  --color-ember: var(--sf-ember);
+  --color-ember-soft: var(--sf-ember-soft);
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+
+  --font-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --font-sans: "Space Grotesk", "Helvetica Neue", Arial, system-ui, sans-serif;
+
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-pill: 999px;
+}
+
+@layer base {
+  html { background: var(--sf-surface); }
+  body { @apply bg-surface text-ink font-sans text-[15px] leading-[22px] antialiased; }
+  h1 { @apply font-display text-[28px] leading-[34px] font-semibold; }
+  h2 { @apply font-display text-[20px] leading-[26px] font-medium; }
+  a { @apply underline-offset-2; }
+  :focus-visible { outline: 2px solid var(--sf-focus); outline-offset: 2px; }
+  input, select, textarea { @apply bg-surface-sunken text-ink border border-border-strong rounded-sm px-2 py-1.5 text-[15px] leading-[22px] w-full; }
+  input::placeholder, textarea::placeholder { color: var(--sf-ink-faint); }
+  input[disabled], select[disabled], textarea[disabled], input[readonly] { @apply text-ink-muted border-hairline; }
+  table { @apply w-full border-collapse; }
+  th { @apply text-left text-[13px] leading-[18px] font-medium text-ink-muted; }
+  ::selection { background: var(--sf-copper); color: var(--sf-on-copper); }
+}
+
+@layer components {
+  .sf-num { @apply font-display tabular-nums; }
+  .number-xl { @apply font-display tabular-nums text-[64px] leading-[64px] font-bold tracking-[-0.02em]; }
+  .number-l { @apply font-display tabular-nums text-[40px] leading-[44px] font-semibold tracking-[-0.01em]; }
+  .number-m { @apply font-display tabular-nums text-[24px] leading-[28px] font-semibold; }
+  .label { @apply text-[13px] leading-[18px] font-medium; }
+  .caption { @apply text-[12px] leading-[16px] text-ink-muted; }
+  .card { @apply bg-surface-raised border border-hairline rounded-md p-4 md:p-6; }
+  .panel { @apply bg-surface-raised border border-hairline rounded-lg p-4 md:p-6; }
+  .well { @apply bg-surface-sunken rounded-sm px-2 py-1.5 text-ink-muted; }
+
+  .btn { @apply inline-flex items-center gap-2 h-10 px-3 rounded-md border border-transparent text-[15px] leading-[22px] font-medium no-underline cursor-pointer whitespace-nowrap; }
+  .btn-primary { @apply bg-copper text-on-copper hover:brightness-95; }
+  .btn-secondary { @apply bg-transparent text-ink border-border-strong hover:bg-surface-sunken; }
+  .btn-ghost { @apply bg-transparent text-ink hover:bg-surface-sunken; }
+  .btn-sm { @apply h-8 px-2 text-[13px]; }
+  .btn[disabled], .btn[aria-disabled="true"] { @apply text-ink-faint bg-transparent border-hairline cursor-not-allowed; }
+
+  .chip { @apply inline-flex items-center gap-1 h-6 px-2 rounded-pill text-[13px] leading-[18px] font-medium whitespace-nowrap; }
+  .chip-met { @apply bg-moss-soft text-moss; }
+  .chip-open { @apply bg-amber-soft text-amber; }
+  .chip-unmet { @apply bg-ember-soft text-ember; }
+  .chip-none { @apply bg-surface-sunken text-ink-muted; }
+
+  .rating { @apply inline-flex items-baseline gap-1 px-2 rounded-sm font-display tabular-nums text-[24px] leading-[28px] font-semibold text-ink; }
+  .rating-low { @apply bg-ember-soft text-ember; }
+  .rating-provisional { @apply text-amber; }
+  .rating-blank { @apply text-ink-faint; }
+  .rating-note { @apply font-sans text-[12px] leading-[16px] font-normal; }
+
+  .mode { @apply inline-flex items-center gap-1 h-[22px] px-2 rounded-sm text-[12px] leading-[16px] font-semibold tracking-[0.04em] border border-border-strong text-ink; }
+  .mode-locked { @apply bg-surface-sunken text-ink-muted; }
+
+  .month-chip { @apply inline-flex flex-col gap-1 min-w-[72px] px-3 py-2 rounded-md border border-hairline bg-surface-raised text-ink no-underline; }
+  .month-chip-current { @apply border-copper; }
+
+  .grid-table { border-collapse: separate; border-spacing: 4px; @apply bg-surface-sunken rounded-md p-2; }
+  .grid-cell { @apply w-11 h-8 rounded-sm text-center align-middle text-[13px] leading-[18px] font-bold; }
+  .cell-met { @apply bg-moss-soft text-moss; }
+  .cell-open { @apply bg-amber-soft text-amber; }
+  .cell-unmet { @apply bg-ember-soft text-ember; }
+  .cell-blank { @apply bg-surface text-ink-faint; }
+
+  .nav-link { @apply block px-3 py-2 rounded-md text-ink-muted no-underline hover:text-ink hover:bg-surface-raised; }
+  .nav-link-active { @apply text-ink bg-surface-raised; }
+  .data-table th, .data-table td { @apply px-3 py-2 border-b border-hairline align-top; }
+  .data-table tr:hover td { @apply bg-surface-raised; }
+  .flash { @apply rounded-md border px-4 py-3 mb-4; }
+  .flash-error { @apply border-ember bg-ember-soft text-ember; }
+  .flash-ok { @apply border-moss bg-moss-soft text-moss; }
+}
+
+/* Motion: one orchestrated sequence on the first load of Ascent; state changes 150 ms; reduced motion cuts it. */
+@media (prefers-reduced-motion: no-preference) {
+  .ramp-path { stroke-dasharray: 2000; stroke-dashoffset: 2000; animation: draw 600ms ease-out forwards; }
+  .actual-path { stroke-dasharray: 2000; stroke-dashoffset: 2000; animation: draw 500ms ease-out 350ms forwards; }
+  .marker { opacity: 0; animation: land 250ms ease-out 800ms forwards; }
+  .chip, .btn, .rating { transition: background-color 150ms, color 150ms, border-color 150ms; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes land { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+}

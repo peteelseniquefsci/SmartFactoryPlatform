@@ -1,0 +1,7 @@
+@{
+    var owner = (Person)ViewBag.Owner; var half = (FiscalHalf)ViewBag.Half;
+    ViewData["Title"] = owner.Name;
+}
+<h1>@owner.Name</h1>
+<p class="text-ink-muted mt-1">@owner.Position?.Title · @half.Label</p>
+<div class="panel mt-6"><p>No KRA yet for @half.Label. It is created when @owner.Name first opens My KRA, as a SETUP draft from the position's template.</p></div>

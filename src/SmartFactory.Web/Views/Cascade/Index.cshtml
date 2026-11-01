@@ -1,0 +1,82 @@
+@model CascadeViewModel
+@{
+    ViewData["Title"] = "Cascade";
+    var sel = Model.Selected!;
+    var month = Model.Week.FiscalMonth!;
+    // Layout: polar rings; each node gets an angular slot within its parent's span.
+    const double size = 720; const double cx = size / 2, cy = size / 2;
+    var ringRadius = new[] { 0.0, 95.0, 190.0, 285.0, 345.0 };
+    var pos = new Dictionary<string, (double x, double y)>();
+    void Place(CascadeNode n, double a0, double a1)
+    {
+        var mid = (a0 + a1) / 2; var r = n.Ring < ringRadius.Length ? ringRadius[n.Ring] : ringRadius[^1];
+        pos[n.Key] = n.Ring == 0 ? (cx, cy) : (cx + r * Math.Cos(mid), cy + r * Math.Sin(mid));
+        int leaves(CascadeNode x) => x.Children.Count == 0 ? 1 : x.Children.Sum(leaves);
+        var total = n.Children.Sum(leaves); var a = a0;
+        foreach (var c in n.Children) { var span = (a1 - a0) * leaves(c) / Math.Max(1, total); Place(c, a, a + span); a += span; }
+    }
+    Place(Model.Root, -Math.PI / 2, 3 * Math.PI / 2);
+    string F(double v) => v.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+    string NodeColor(CascadeNode n)
+    {
+        if (n.Evaluation is null) return "var(--sf-border-strong)";
+        var statuses = n.Evaluation.ActiveSlots.Select(s => s.Month(month.Index)?.Status ?? MonthStatus.None).Where(s => s != MonthStatus.None).ToList();
+        if (statuses.Count == 0) return "var(--sf-ink-faint)";
+        if (statuses.Any(s => s == MonthStatus.Unmet)) return "var(--sf-ember)";
+        if (statuses.All(s => s == MonthStatus.Met)) return "var(--sf-moss)";
+        return "var(--sf-amber)";
+    }
+}
+<h1>Cascade</h1>
+<p class="text-ink-muted mt-1">Company → Digital Systems / E&amp;A → sections → people · @month.Label status at @Model.Week.Label · @Model.Half.Label. Select a node for its slots and status. The cascade is who owns which Top Goal line, not slots linked to slots.</p>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+    <div class="panel overflow-x-auto">
+        <svg viewBox="0 0 @size @size" class="w-full h-auto max-w-[720px] mx-auto" role="group" aria-label="Organization orbit">
+            @foreach (var r in ringRadius.Skip(1)) { <circle cx="@F(cx)" cy="@F(cy)" r="@F(r)" fill="none" stroke="var(--sf-hairline)" stroke-dasharray="2 6" /> }
+            @foreach (var n in Model.All.Where(n => n.ParentKey is not null && pos.ContainsKey(n.ParentKey)))
+            {
+                var a = pos[n.ParentKey!]; var b = pos[n.Key];
+                <line x1="@F(a.x)" y1="@F(a.y)" x2="@F(b.x)" y2="@F(b.y)" stroke="var(--sf-hairline)" />
+            }
+            @foreach (var n in Model.All)
+            {
+                var p = pos[n.Key]; var r = n.Ring == 0 ? 22 : n.Ring == 1 ? 16 : n.Ring == 2 ? 13 : 9;
+                var isSel = n.Key == sel.Key;
+                <a href="/cascade?node=@n.Key" aria-label="@n.Title, @n.Subtitle">
+                    <circle cx="@F(p.x)" cy="@F(p.y)" r="@r" fill="@NodeColor(n)" stroke="@(isSel ? "var(--sf-copper)" : "var(--sf-surface)")" stroke-width="@(isSel ? 4 : 2)" />
+                    @if (n.Ring <= 2)
+                    {
+                        @Svg.Text(p.x, p.y + r + 13, n.Title.Length > 22 ? n.Title[..21] + "…" : n.Title, size: 10, anchor: "middle")
+                    }
+                </a>
+            }
+        </svg>
+        <div class="mt-3 flex flex-wrap gap-3 caption"><span><span class="inline-block w-3 h-3 rounded-pill bg-moss align-middle"></span> Met</span><span><span class="inline-block w-3 h-3 rounded-pill bg-amber align-middle"></span> —</span><span><span class="inline-block w-3 h-3 rounded-pill bg-ember align-middle"></span> Unmet</span><span><span class="inline-block w-3 h-3 rounded-pill bg-border-strong align-middle"></span> not visible to you or no KRA</span></div>
+    </div>
+    <aside class="panel">
+        <h2>@sel.Title</h2>
+        <p class="caption mt-1">@sel.Subtitle@(sel.Person?.Position?.Section is null ? "" : $" · {sel.Person.Position.Section.Name}")</p>
+        @if (sel.Person?.Position?.Section?.Ownership is string own) { <p class="caption mt-2">Section ownership: @own</p> }
+        @if (sel.Evaluation is null)
+        {
+            <p class="text-ink-muted mt-4">@(sel.Person is null ? "This position is vacant." : "Slots are visible to the person and their superiors only.")</p>
+        }
+        else
+        {
+            <div class="mt-3 flex items-center gap-2"><partial name="_ModeBadge" model="sel.Evaluation.Kra" /><a class="text-cyan-text caption" href="/kra/person/@sel.Person!.Id">Open KRA</a></div>
+            <ul class="mt-4 space-y-2">
+                @foreach (var s in sel.Evaluation.ActiveSlots)
+                {
+                    var me = s.Month(month.Index)!;
+                    <li class="well flex items-start justify-between gap-2"><div><div class="text-ink text-[14px]">@s.Slot.Measure</div><div class="caption">@s.Slot.TopGoalLine?.Measure · @s.Slot.Weight.ToString("0.##")%</div></div><partial name="_StatusChip" model="(me.Status, (string?)null)" /></li>
+                }
+            </ul>
+        }
+        @if (sel.Children.Count > 0)
+        {
+            <h2 class="mt-6 text-[16px]">Reports</h2>
+            <ul class="mt-2 space-y-1">@foreach (var c in sel.Children) { <li><a class="text-ink" href="/cascade?node=@c.Key">@c.Title</a> <span class="caption">· @c.Subtitle</span></li> }</ul>
+        }
+    </aside>
+</div>

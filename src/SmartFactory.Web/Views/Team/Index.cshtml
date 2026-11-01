@@ -1,0 +1,54 @@
+@model TeamViewModel
+@{
+    ViewData["Title"] = "Team view";
+    var months = Model.Half.Months;
+    var firstWeekEnd = months[0].Weeks[0].EndDate;
+}
+<div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1>Team view</h1>
+        <p class="text-ink-muted mt-1">One row per person beneath you · @Model.Week.Label (@Fmt.Range(Model.Week.StartDate, Model.Week.EndDate)) · @Model.Half.Label. Diagnostic only: nothing here rolls up into anyone's rating.</p>
+    </div>
+    <form method="get" class="flex items-center gap-2"><label class="caption" for="week">Week</label>
+        <select id="week" name="week" class="!w-auto" onchange="this.form.submit()">@foreach (var w in FiscalCalendar.AllWeeks(Model.Half)) { <option value="@w.Label" selected="@(w.Id == Model.Week.Id)">@w.Label · @Fmt.Range(w.StartDate, w.EndDate)</option> }</select></form>
+</div>
+
+@if (Model.Rows.Count == 0 && Model.WithoutKra.Count == 0)
+{
+    <div class="panel mt-6"><h2>Nobody reports to you yet</h2><p class="text-ink-muted mt-2">People appear here when the organization places their position beneath yours.</p></div>
+}
+else
+{
+    <div class="mt-6 overflow-x-auto">
+        <table class="data-table min-w-[1000px]">
+            <thead><tr><th>Person</th><th>KRA</th><th>Main slot · @Model.Week.Label</th>@foreach (var m in months) {<th class="text-center">@m.Label[..3]</th>}<th class="text-center">2H</th></tr></thead>
+            <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                var p = r.Kra.Person!; var main = EvaluationService.MainSlot(r);
+                var monthly = Model.RowsMonthly.FirstOrDefault(x => x.Kra.PersonId == p.Id) ?? r;
+                var wk = main?.Week(Model.Week.Label);
+                var late = r.Kra.Version == 0 && DateOnly.FromDateTime(DateTime.Today) > firstWeekEnd;
+                <tr>
+                    <td><a href="/week?week=@Model.Week.Label&person=@p.Id" class="font-medium text-ink">@p.Name</a><div class="caption">@p.Position?.Title · @p.Position?.Section?.Name</div></td>
+                    <td><partial name="_ModeBadge" model="r.Kra" />
+                        @if (r.Kra.Status == ApprovalStatus.Submitted) {<div class="mt-1"><span class="chip chip-open">Waiting for approval</span></div>}
+                        @if (late) {<div class="mt-1"><span class="chip chip-unmet">No version locked</span></div>}
+                    </td>
+                    <td>@if (main is not null) {<div class="caption">@main.Slot.Measure</div><div class="mt-1 flex items-center gap-2"><partial name="_JudgementChip" model="(wk?.Judgement, (string?)null)" /><span class="caption">@Fmt.Num(wk?.Actual, 2) vs @Fmt.Num(wk?.Target, 2)</span></div>} else {<span class="text-ink-muted">No active slot</span>}</td>
+                    @foreach (var m in months)
+                    {
+                        var t = monthly.MonthTotals.First(x => x.Month.Index == m.Index);
+                        <td class="text-center"><a href="/kra/person/@p.Id" class="no-underline"><partial name="_Rating" model="(t.Total, 2, t.Provisional)" /></a></td>
+                    }
+                    <td class="text-center"><partial name="_Rating" model="(monthly.HalfPerformance, 2, false)" /></td>
+                </tr>
+            }
+            @foreach (var p in Model.WithoutKra)
+            {
+                <tr><td><span class="font-medium">@p.Name</span><div class="caption">@p.Position?.Title · @p.Position?.Section?.Name</div></td><td colspan="9" class="text-ink-muted">No KRA yet for @Model.Half.Label: created when they first open My KRA.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

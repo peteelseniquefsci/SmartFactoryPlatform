@@ -1,0 +1,10 @@
+@model (string month, string fiscal, MonthStatus status, bool current, string? href)
+@{
+    var key = Fmt.StatusKey(Model.status);
+    var color = Model.status switch { MonthStatus.Met => "text-moss", MonthStatus.Unmet => "text-ember", MonthStatus.Open => "text-amber", _ => "text-ink-faint" };
+}
+<a href="@(Model.href ?? "#")" class="month-chip @(Model.current ? "month-chip-current" : "")" aria-current="@(Model.current ? "true" : null)">
+    <span class="font-display text-[13px] leading-[18px] font-medium">@Model.month</span>
+    <span class="caption">@Model.fiscal</span>
+    <span class="text-[12px] leading-[16px] font-medium @color">@Fmt.Status(Model.status)</span>
+</a>
