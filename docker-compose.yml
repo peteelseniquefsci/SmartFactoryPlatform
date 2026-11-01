@@ -1,0 +1,33 @@
+# One-command demo: MySQL 8 + the app in Development mode (demo people, demo actuals, person-picker sign-in, clock pinned to 11 Nov 2026).
+#   docker compose up --build
+# Then open http://localhost:8080 and sign in as any demo person (DEMO-001 is the Smart Factory Manager and Administrator).
+# Not for production: Development mode has no password and seeds demo data.
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: smartfactory
+      MYSQL_USER: sf
+      MYSQL_PASSWORD: sf
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-usf", "-psf"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - smartfactory-db:/var/lib/mysql
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__SmartFactory: "Server=db;Port=3306;Database=smartfactory;User=sf;Password=sf;"
+      Database__ServerVersion: "8.0.36-mysql"
+    ports:
+      - "8080:8080"
+volumes:
+  smartfactory-db:

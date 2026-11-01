@@ -19,6 +19,14 @@ once, committed), ClosedXML for the Excel export, xUnit for the 22 acceptance te
 
 ## Run locally
 
+Fastest way, with Docker installed (MySQL 8 and the app in Development mode, demo data, no password):
+
+```bash
+docker compose up --build
+```
+
+Then open http://localhost:8080 and sign in as any demo person. Without Docker:
+
 Prerequisites: .NET 8 SDK, MySQL 8 (or MariaDB 10.11), Node 18+ only if you change the styles.
 
 ```bash
