@@ -14,30 +14,30 @@
         <p class="text-ink-muted mt-1">@week.Label · @Fmt.Range(week.StartDate, week.EndDate) · week @week.K of @week.N in @month.Label · @Model.Half.Label@(isCurrent ? " · this week" : "")</p>
     </div>
     <nav class="flex items-center gap-2" aria-label="Work week">
-        @if (Model.Previous is not null) { <a class="btn btn-ghost btn-sm" href="/week?week=@Model.Previous.Label@personQ">← @Model.Previous.Label</a> }
-        <a class="btn btn-secondary btn-sm @(isCurrent ? "border-copper" : "")" href="/week?week=@Model.ThisWeek.Label@personQ">This week</a>
-        @if (Model.Next is not null) { <a class="btn btn-ghost btn-sm" href="/week?week=@Model.Next.Label@personQ">@Model.Next.Label →</a> }
+        @if (Model.Previous is not null) { <a class="btn btn-ghost btn-sm" href="~/week?week=@Model.Previous.Label@personQ">← @Model.Previous.Label</a> }
+        <a class="btn btn-secondary btn-sm @(isCurrent ? "border-copper" : "")" href="~/week?week=@Model.ThisWeek.Label@personQ">This week</a>
+        @if (Model.Next is not null) { <a class="btn btn-ghost btn-sm" href="~/week?week=@Model.Next.Label@personQ">@Model.Next.Label →</a> }
     </nav>
 </div>
 
 @if (!Model.IsOwner)
 {
-    <p class="mt-3"><a href="/kra/person/@Model.Owner.Id" class="text-cyan-text">Open KRA</a> · <partial name="_ModeBadge" model="Model.Kra" /></p>
+    <p class="mt-3"><a href="~/kra/person/@Model.Owner.Id" class="text-cyan-text">Open KRA</a> · <partial name="_ModeBadge" model="Model.Kra" /></p>
 }
 
 @if (Model.Kra.Mode == DefinitionMode.Setup)
 {
-    <div class="flash flash-ok mt-6 !border-amber !bg-amber-soft !text-amber" role="status">This KRA is still in SETUP. Weekly actuals can be entered, but the definitions are not approved yet. <a href="/kra" class="underline">Finish setup</a>.</div>
+    <div class="flash flash-ok mt-6 !border-amber !bg-amber-soft !text-amber" role="status">This KRA is still in SETUP. Weekly actuals can be entered, but the definitions are not approved yet. <a href="~/kra" class="underline">Finish setup</a>.</div>
 }
 
 @if (weeklySlots.Count == 0 && manualSlots.Count == 0)
 {
-    <div class="panel mt-6"><h2>No active slots</h2><p class="text-ink-muted mt-2">Add slots in <a href="/kra" class="text-cyan-text">My KRA</a> first. A slot is active when its measure is non-empty.</p></div>
+    <div class="panel mt-6"><h2>No active slots</h2><p class="text-ink-muted mt-2">Add slots in <a href="~/kra" class="text-cyan-text">My KRA</a> first. A slot is active when its measure is non-empty.</p></div>
 }
 
 @if (weeklySlots.Count > 0)
 {
-    <form method="post" action="/week/save" class="mt-6">
+    <form method="post" action="~/week/save" class="mt-6">
         @Html.AntiForgeryToken()
         <input type="hidden" name="KraId" value="@Model.Kra.Id" /><input type="hidden" name="Week" value="@week.Label" />
         <div class="flex flex-wrap items-center justify-between gap-3">
@@ -109,7 +109,7 @@
 
 @if (manualSlots.Count > 0)
 {
-    <form method="post" action="/week/save-month" class="mt-8">
+    <form method="post" action="~/week/save-month" class="mt-8">
         @Html.AntiForgeryToken()
         <input type="hidden" name="KraId" value="@Model.Kra.Id" /><input type="hidden" name="MonthIndex" value="@month.Index" /><input type="hidden" name="ReturnWeek" value="@week.Label" />
         <h2>Manual values for @month.Label</h2>
@@ -142,7 +142,7 @@
 
 @if (Model.CanRemark && !Model.IsOwner && weeklySlots.Count > 0)
 {
-    <form method="post" action="/week/remark" class="panel mt-8 grid gap-3 md:grid-cols-[200px_1fr_auto] items-end">
+    <form method="post" action="~/week/remark" class="panel mt-8 grid gap-3 md:grid-cols-[200px_1fr_auto] items-end">
         @Html.AntiForgeryToken()
         <input type="hidden" name="kraId" value="@Model.Kra.Id" /><input type="hidden" name="week" value="@week.Label" />
         <label class="block"><span class="label text-ink-muted">Slot</span><select name="slotNumber" class="mt-1">@foreach (var s in ev.ActiveSlots) { <option value="@s.Slot.SlotNumber">@s.Slot.SlotNumber · @s.Slot.Measure</option> }</select></label>

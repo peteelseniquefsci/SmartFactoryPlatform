@@ -6,13 +6,13 @@
 <p class="text-ink-muted mt-1">Organization data, periods, rating basis library, Top Goal lines, roles and imports. Administrators never enter results on anyone's behalf except by import.</p>
 <partial name="_Nav" />
 <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <a class="card no-underline text-ink" href="/admin/organization"><div class="caption">People active</div><div class="number-l">@ViewBag.People</div><div class="caption">@ViewBag.Positions positions</div></a>
-    <a class="card no-underline text-ink" href="/admin/periods"><div class="caption">Current half</div><div class="number-m mt-2">@(halves.FirstOrDefault(h => h.IsCurrent)?.Label ?? "none")</div><div class="caption">@halves.Count halves defined</div></a>
-    <a class="card no-underline text-ink" href="/admin/rating-bases"><div class="caption">Rating bases</div><div class="number-l">@ViewBag.Bases</div><div class="caption">the only place bands are defined</div></a>
-    <a class="card no-underline text-ink" href="/admin/top-goals"><div class="caption">Top Goal lines</div><div class="number-l">@ViewBag.Lines</div><div class="caption">@ViewBag.Templates template slots</div></a>
+    <a class="card no-underline text-ink" href="~/admin/organization"><div class="caption">People active</div><div class="number-l">@ViewBag.People</div><div class="caption">@ViewBag.Positions positions</div></a>
+    <a class="card no-underline text-ink" href="~/admin/periods"><div class="caption">Current half</div><div class="number-m mt-2">@(halves.FirstOrDefault(h => h.IsCurrent)?.Label ?? "none")</div><div class="caption">@halves.Count halves defined</div></a>
+    <a class="card no-underline text-ink" href="~/admin/rating-bases"><div class="caption">Rating bases</div><div class="number-l">@ViewBag.Bases</div><div class="caption">the only place bands are defined</div></a>
+    <a class="card no-underline text-ink" href="~/admin/top-goals"><div class="caption">Top Goal lines</div><div class="number-l">@ViewBag.Lines</div><div class="caption">@ViewBag.Templates template slots</div></a>
 </div>
 <section class="panel mt-8">
     <h2>Latest changes</h2>
     <ul class="mt-3 space-y-1 caption">@foreach (var a in audit) { <li><span class="text-ink">@a.At.ToString("dd MMM yyyy HH:mm")</span> · @a.ActorName · @a.Action @a.Entity @a.EntityId@(a.Field is null ? "" : $" · {a.Field}: {a.OldValue ?? "blank"} → {a.NewValue ?? "blank"}")@(a.Detail is null ? "" : $" · {a.Detail}")</li> }</ul>
-    <a class="btn btn-ghost btn-sm mt-3" href="/admin/audit">Full audit trail</a>
+    <a class="btn btn-ghost btn-sm mt-3" href="~/admin/audit">Full audit trail</a>
 </section>

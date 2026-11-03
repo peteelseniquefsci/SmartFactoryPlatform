@@ -12,7 +12,7 @@
     {
         <tr class="@(t.Active ? "" : "text-ink-faint")"><td class="sf-num">@t.SortOrder</td><td>@t.FocusItem</td><td>@t.StrategicObjective</td><td class="font-medium">@t.Measure</td><td class="text-right"><button type="button" class="btn btn-ghost btn-sm" data-toggle="tg-@t.Id" aria-expanded="false">Edit</button></td></tr>
         <tr id="tg-@t.Id" class="hidden"><td colspan="5">
-            <form method="post" action="/admin/top-goals/save" class="grid gap-3 md:grid-cols-5 items-end py-2">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@t.Id" />
+            <form method="post" action="~/admin/top-goals/save" class="grid gap-3 md:grid-cols-5 items-end py-2">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@t.Id" />
                 <label class="block"><span class="label text-ink-muted">Focus item</span><input name="focusItem" value="@t.FocusItem" class="mt-1" required /></label>
                 <label class="block md:col-span-2"><span class="label text-ink-muted">Strategic objective</span><input name="strategicObjective" value="@t.StrategicObjective" class="mt-1" required /></label>
                 <label class="block"><span class="label text-ink-muted">Measure</span><input name="measure" value="@t.Measure" class="mt-1" required /></label>
@@ -21,7 +21,7 @@
     }
     </tbody></table></div>
 <details class="mt-3"><summary class="cursor-pointer text-cyan-text">Add a line</summary>
-    <form method="post" action="/admin/top-goals/save" class="card mt-2 grid gap-3 md:grid-cols-5 items-end">@Html.AntiForgeryToken()
+    <form method="post" action="~/admin/top-goals/save" class="card mt-2 grid gap-3 md:grid-cols-5 items-end">@Html.AntiForgeryToken()
         <label class="block"><span class="label text-ink-muted">Focus item</span><input name="focusItem" class="mt-1" required /></label>
         <label class="block md:col-span-2"><span class="label text-ink-muted">Strategic objective</span><input name="strategicObjective" class="mt-1" required /></label>
         <label class="block"><span class="label text-ink-muted">Measure</span><input name="measure" class="mt-1" required /></label>

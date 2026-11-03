@@ -57,7 +57,7 @@ public class AccountController : Controller
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r.ToString())));
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = false });
-        return LocalRedirect(string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl);
+        return LocalRedirect(string.IsNullOrEmpty(returnUrl) ? Url.Content("~/") : returnUrl);
     }
 
     [HttpPost("sign-out")]

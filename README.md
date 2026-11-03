@@ -59,6 +59,8 @@ dotnet test
 | `CompanyApi:*` | Base URL and paths of the identity API, the Exchange API URL and sender. The identity API is expected to answer `{ employeeId, displayName, email }`. |
 | `Seed:DemoPeople`, `Seed:DemoActuals` | Development only. Production people come from the company API via Admin → Organization. |
 | `Clock:Today` | Pin "today" for demos and parallel runs; remove in production. |
+| `Hosting:*` | `UseHsts`, `RedirectToHttps`, `BehindReverseProxy`, `PathBase` (Kestrel behind a proxy only; IIS sets the path itself). |
+| `DataProtection:KeysPath` | Folder for the cookie-encryption keys (required on IIS; see the IIS section). |
 
 ## Deployment on the FSCI LAN (no internet)
 
@@ -70,8 +72,65 @@ dotnet test
 - Migrations: `dotnet ef database update --project src/SmartFactory.Infrastructure --startup-project src/SmartFactory.Web`
   or let the app migrate on start. A new migration: `dotnet ef migrations add <Name> --project src/SmartFactory.Infrastructure --startup-project src/SmartFactory.Infrastructure --output-dir Data/Migrations` (set `SMARTFACTORY_SERVERVERSION` if not MySQL 8).
 - Nightly backup: `mysqldump smartfactory`; every change is in the `AuditEntries` table with who, when, old and new value.
+- Windows Server with IIS is the production host: see the IIS section below.
 - Roles: Person, Section head and Manager derive from the position flags in Admin → Organization; Administrator and HR
   viewer are assigned there. Permissions follow the reporting line.
+
+## Deploying to IIS on Windows Server (the target environment)
+
+The production host is IIS on Windows Server on the FSCI LAN, with MySQL 8 on Windows or a database server on the LAN.
+
+**Server prerequisites**
+
+1. Windows Server 2019 or later with the Web Server (IIS) role.
+2. The **ASP.NET Core 8.0 Hosting Bundle** (installs the .NET 8 runtime and the ASP.NET Core Module V2 for IIS). Copy the
+   installer from the internal mirror; restart IIS afterwards (`net stop was /y` then `net start w3svc`).
+3. MySQL 8 reachable from the web server, with the `smartfactory` database and a user that may create tables (migrations run
+   at start-up) or, if policy forbids that, apply the migration script once: `dotnet ef migrations script -o smartfactory.sql --project src/SmartFactory.Infrastructure --startup-project src/SmartFactory.Infrastructure` and set `Database:MigrateOnStartup` to `false`.
+
+**Publish** (on a build machine with the .NET 8 SDK; no internet is needed once NuGet is mirrored)
+
+```bash
+dotnet publish src/SmartFactory.Web -c Release -r win-x64 --self-contained false -o publish
+```
+
+The `publish` folder holds `SmartFactory.Web.dll`, the transformed `web.config` (ASP.NET Core Module V2, in-process hosting,
+`ASPNETCORE_ENVIRONMENT=Production`, 50 MB upload limit for imports), `wwwroot` with the compiled CSS and bundled fonts, and
+`Seed\kra-templates.json`. Copy it to the server, for example `C:\inetpub\smartfactory`.
+
+**IIS configuration**
+
+1. Application pool: .NET CLR version **No Managed Code**, Integrated pipeline, identity `ApplicationPoolIdentity` (or a
+   domain service account if the company APIs need Windows authentication), **Load User Profile = True**, Idle time-out 0 and
+   Regular time interval 0 if you want the app to stay warm (or enable Preload / Application Initialization).
+2. Site or application: point a new site (own host name and HTTPS binding with the company certificate) or an application under
+   an existing site (for example `/smartfactory`) at the publish folder, using that application pool. Both work: every link and
+   redirect in the app is application-relative, and IIS passes the application path to the app automatically.
+3. Permissions: grant the application pool identity (`IIS AppPool\<pool name>`) **Read** on the publish folder and **Modify** on
+   the data-protection key folder and the log folder (next step).
+4. Settings: edit `appsettings.Production.json` in the publish folder (or set them as environment variables in `web.config`
+   under `<environmentVariables>`, using `__` as the section separator, e.g. `ConnectionStrings__SmartFactory`):
+   - `ConnectionStrings:SmartFactory` and `Database:ServerVersion` (`8.0.36-mysql` for MySQL 8).
+   - `CompanyApi:*` for the LDAP / employee-information API and the single permitted Exchange API address.
+   - `DataProtection:KeysPath`, a folder such as `C:\ProgramData\SmartFactoryPlatform\keys`: sign-in cookies are encrypted with keys
+     stored there, so they survive application-pool recycles and are shared if two web servers run the app.
+   - `Hosting:UseHsts` (true when the site is HTTPS only), `Hosting:RedirectToHttps` (true if the site also has an HTTP binding),
+     `Hosting:BehindReverseProxy` (true only when another proxy sits in front of IIS and sends X-Forwarded-* headers).
+   - `Seed:DemoPeople` and `Seed:DemoActuals` must stay `false` in production.
+5. Logging: `web.config` writes nothing by default; to diagnose a start-up problem set `stdoutLogEnabled="true"` (logs go to
+   `logs\stdout_*.log` under the publish folder, which the pool identity must be able to write) and read the Windows Event Log
+   (Application) for ASP.NET Core Module entries. Turn it off again afterwards.
+6. Start the site and open `https://<host>/` (or `/smartfactory`). The first start applies migrations and seeds the
+   organization, calendar, Top Goal lines, rating library and templates; sign-in then goes through the company API.
+
+**Operations on Windows**
+
+- Nightly backup with Task Scheduler: `mysqldump -u backup -p smartfactory > D:\backup\smartfactory_%date%.sql`; test a restore
+  before go-live.
+- New release: stop the application pool, replace the folder contents (keep `appsettings.Production.json`), start the pool.
+  Migrations apply on the first request.
+- The app does not call the internet: fonts, CSS and scripts are served from `wwwroot`; email and identity go only to the
+  configured company API addresses.
 
 ## Migration from the Excel system
 

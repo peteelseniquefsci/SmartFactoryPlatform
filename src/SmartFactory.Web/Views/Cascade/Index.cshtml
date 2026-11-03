@@ -43,7 +43,7 @@
             {
                 var p = pos[n.Key]; var r = n.Ring == 0 ? 22 : n.Ring == 1 ? 16 : n.Ring == 2 ? 13 : 9;
                 var isSel = n.Key == sel.Key;
-                <a href="/cascade?node=@n.Key" aria-label="@n.Title, @n.Subtitle">
+                <a href="~/cascade?node=@n.Key" aria-label="@n.Title, @n.Subtitle">
                     <circle cx="@F(p.x)" cy="@F(p.y)" r="@r" fill="@NodeColor(n)" stroke="@(isSel ? "var(--sf-copper)" : "var(--sf-surface)")" stroke-width="@(isSel ? 4 : 2)" />
                     @if (n.Ring <= 2)
                     {
@@ -64,7 +64,7 @@
         }
         else
         {
-            <div class="mt-3 flex items-center gap-2"><partial name="_ModeBadge" model="sel.Evaluation.Kra" /><a class="text-cyan-text caption" href="/kra/person/@sel.Person!.Id">Open KRA</a></div>
+            <div class="mt-3 flex items-center gap-2"><partial name="_ModeBadge" model="sel.Evaluation.Kra" /><a class="text-cyan-text caption" href="~/kra/person/@sel.Person!.Id">Open KRA</a></div>
             <ul class="mt-4 space-y-2">
                 @foreach (var s in sel.Evaluation.ActiveSlots)
                 {
@@ -76,7 +76,7 @@
         @if (sel.Children.Count > 0)
         {
             <h2 class="mt-6 text-[16px]">Reports</h2>
-            <ul class="mt-2 space-y-1">@foreach (var c in sel.Children) { <li><a class="text-ink" href="/cascade?node=@c.Key">@c.Title</a> <span class="caption">· @c.Subtitle</span></li> }</ul>
+            <ul class="mt-2 space-y-1">@foreach (var c in sel.Children) { <li><a class="text-ink" href="~/cascade?node=@c.Key">@c.Title</a> <span class="caption">· @c.Subtitle</span></li> }</ul>
         }
     </aside>
 </div>

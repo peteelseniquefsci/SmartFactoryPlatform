@@ -12,8 +12,8 @@
     <div class="flash flash-ok mt-6 !border-amber !bg-amber-soft !text-amber" role="status">@half.Label ends @Fmt.Date(half.EndDate). Exports before then carry the ratings entered so far; months not yet closed show as provisional on screen and as their current rating in the file.</div>
 }
 <div class="mt-6 flex flex-wrap gap-3">
-    <a class="btn btn-primary" href="/exports/consolidated?half=@half.Id">Download consolidated file</a>
-    <a class="btn btn-secondary" href="/exports/all?half=@half.Id">Download all per-person files (zip)</a>
+    <a class="btn btn-primary" href="~/exports/consolidated?half=@half.Id">Download consolidated file</a>
+    <a class="btn btn-secondary" href="~/exports/all?half=@half.Id">Download all per-person files (zip)</a>
 </div>
 <div class="mt-6 overflow-x-auto">
     <table class="data-table">
@@ -24,7 +24,7 @@
             <tr><td class="font-medium">@e.Kra.Person?.Name</td><td class="caption">@e.Kra.Person?.Position?.Title</td><td><partial name="_ModeBadge" model="e.Kra" /></td>
                 @foreach (var t in e.MonthTotals) {<td class="text-center"><partial name="_Rating" model="(t.Total, 2, t.Provisional)" /></td>}
                 <td class="text-center"><partial name="_Rating" model="(e.HalfPerformance, 2, false)" /></td>
-                <td class="text-right"><a class="btn btn-ghost btn-sm" href="/exports/person/@e.Kra.PersonId?half=@half.Id">Download</a></td></tr>
+                <td class="text-right"><a class="btn btn-ghost btn-sm" href="~/exports/person/@e.Kra.PersonId?half=@half.Id">Download</a></td></tr>
         }
         </tbody>
     </table>

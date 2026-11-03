@@ -17,7 +17,7 @@ public class RuleViolationFilter : IExceptionFilter
         var temp = _tempData.GetTempData(context.HttpContext);
         temp["Error"] = ex.Message;
         var referer = context.HttpContext.Request.Headers.Referer.ToString();
-        context.Result = new RedirectResult(string.IsNullOrEmpty(referer) ? "/" : referer);
+        context.Result = new RedirectResult(string.IsNullOrEmpty(referer) ? (context.HttpContext.Request.PathBase.HasValue ? context.HttpContext.Request.PathBase.Value! : "/") : referer);
         context.ExceptionHandled = true;
     }
 }

@@ -58,7 +58,7 @@ public class CurrentUserMiddleware
             if (user is null && !context.Request.Path.StartsWithSegments("/account"))
             {
                 await context.SignOutAsync();
-                context.Response.Redirect("/account/sign-in");
+                context.Response.Redirect(context.Request.PathBase + "/account/sign-in");
                 return;
             }
             if (user is not null)

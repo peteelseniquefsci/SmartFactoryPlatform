@@ -68,7 +68,7 @@ public class AdminController : Controller
         _audit.Record("Position", p.Id.ToString(), id is null ? "Create" : "Update", oldValue: before, newValue: $"{p.Title}|{p.SectionId}|{p.ReportsToPositionId}|{p.Seats}|{p.IsSectionHead}|{p.IsManager}");
         await _db.SaveChangesAsync();
         TempData["Ok"] = "Position saved.";
-        return Redirect("/admin/organization");
+        return Redirect(Url.Content("~/admin/organization"));
     }
 
     [HttpPost("people/save")]
@@ -99,7 +99,7 @@ public class AdminController : Controller
         }
         await _db.SaveChangesAsync();
         TempData["Ok"] = id is null ? $"{person.Name} added. Their KRA is created as a SETUP draft from the position template when they first sign in." : "Person saved.";
-        return Redirect("/admin/organization");
+        return Redirect(Url.Content("~/admin/organization"));
     }
 
     [HttpPost("roles/toggle")]
@@ -112,7 +112,7 @@ public class AdminController : Controller
         if (existing is not null) { _db.RoleAssignments.Remove(existing); _audit.Record("RoleAssignment", personId.ToString(), "Revoke", newValue: role.ToString()); }
         else { _db.RoleAssignments.Add(new RoleAssignment { PersonId = personId, Role = role, GrantedBy = user.Name, GrantedAt = _clock.UtcNow }); _audit.Record("RoleAssignment", personId.ToString(), "Grant", newValue: role.ToString()); }
         await _db.SaveChangesAsync();
-        return Redirect("/admin/organization");
+        return Redirect(Url.Content("~/admin/organization"));
     }
 
     // ---------- Periods ----------
@@ -132,7 +132,7 @@ public class AdminController : Controller
         _audit.Record("FiscalHalf", h.Id.ToString(), "Create", detail: h.Label);
         await _db.SaveChangesAsync();
         TempData["Ok"] = $"{h.Label} is ready with its generated calendar.";
-        return Redirect("/admin/periods");
+        return Redirect(Url.Content("~/admin/periods"));
     }
 
     [HttpPost("periods/current")]
@@ -141,7 +141,7 @@ public class AdminController : Controller
     {
         foreach (var h in await _db.FiscalHalves.ToListAsync()) h.IsCurrent = h.Id == id;
         await _db.SaveChangesAsync();
-        return Redirect("/admin/periods");
+        return Redirect(Url.Content("~/admin/periods"));
     }
 
     // ---------- Rating basis library ----------
@@ -161,7 +161,7 @@ public class AdminController : Controller
         _audit.Record("RatingBasis", b.Key, id is null ? "Create" : "Update", oldValue: before, newValue: $"{b.Mode} {b.T5} {b.T4} {b.T3} {b.T2}");
         await _db.SaveChangesAsync();
         TempData["Ok"] = "Rating basis saved. Ratings are derived, so every slot using it now rates with the new bands.";
-        return Redirect("/admin/rating-bases");
+        return Redirect(Url.Content("~/admin/rating-bases"));
     }
 
     // ---------- Top Goal lines ----------
@@ -180,7 +180,7 @@ public class AdminController : Controller
         await _db.SaveChangesAsync();
         _audit.Record("TopGoalLine", t.Id.ToString(), id is null ? "Create" : "Update", oldValue: before, newValue: $"{t.FocusItem}|{t.StrategicObjective}|{t.Measure}|{t.Active}");
         await _db.SaveChangesAsync();
-        return Redirect("/admin/top-goals");
+        return Redirect(Url.Content("~/admin/top-goals"));
     }
 
     // ---------- Imports ----------
@@ -199,7 +199,7 @@ public class AdminController : Controller
         using var reader = new StreamReader(file.OpenReadStream());
         var (p, s, errors) = await _templates.ImportAsync(await reader.ReadToEndAsync());
         TempData["Ok"] = $"Templates imported: {p} positions, {s} slots." + (errors.Count > 0 ? $" {errors.Count} rows skipped: {string.Join(" ", errors.Take(5))}" : "");
-        return Redirect("/admin/imports");
+        return Redirect(Url.Content("~/admin/imports"));
     }
 
     [HttpPost("imports/results")]
@@ -209,7 +209,7 @@ public class AdminController : Controller
         using var reader = new StreamReader(file.OpenReadStream());
         var summary = await _results.ImportCsvAsync(reader, halfId, source, overwriteTyped);
         TempData["Ok"] = $"Import: {summary.Rows} rows, {summary.Created} created, {summary.Updated} updated, {summary.Unchanged} unchanged." + (summary.Errors.Count > 0 ? $" {summary.Errors.Count} notes: {string.Join(" ", summary.Errors.Take(5))}" : "");
-        return Redirect("/admin/imports");
+        return Redirect(Url.Content("~/admin/imports"));
     }
 
     [HttpGet("audit")]

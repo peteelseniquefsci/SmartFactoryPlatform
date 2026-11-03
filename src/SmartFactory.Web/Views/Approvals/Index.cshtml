@@ -17,16 +17,16 @@
             <div class="card" id="kra-@k.Id">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div><div class="font-medium">@k.Person?.Name</div><div class="caption">@k.Person?.Position?.Title · submitted @Fmt.Date(k.SubmittedAt!.Value) · @k.Slots.Count(s => s.IsActive) slots · weights <span class="@(ok ? "text-moss" : "text-ember")">@total.ToString("0.##")%</span></div></div>
-                    <div class="flex items-center gap-2"><partial name="_ModeBadge" model="k" /><a class="btn btn-ghost btn-sm" href="/kra/person/@k.Person?.Id">Review slots</a></div>
+                    <div class="flex items-center gap-2"><partial name="_ModeBadge" model="k" /><a class="btn btn-ghost btn-sm" href="~/kra/person/@k.Person?.Id">Review slots</a></div>
                 </div>
                 <ul class="mt-3 grid gap-1 md:grid-cols-2 caption">
                     @foreach (var s in k.Slots.Where(s => s.IsActive).OrderBy(s => s.SlotNumber)) { <li>@s.SlotNumber · <span class="text-ink">@s.Measure</span> · @s.Weight.ToString("0.##")% · @s.TopGoalLine?.Measure · @s.RatingBasis?.Key</li> }
                 </ul>
                 <div class="mt-4 grid gap-3 md:grid-cols-2">
-                    <form method="post" action="/approvals/approve" class="flex gap-2 items-end">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" />
+                    <form method="post" action="~/approvals/approve" class="flex gap-2 items-end">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" />
                         <label class="block flex-1"><span class="label text-ink-muted">Note (optional)</span><input name="note" class="mt-1" /></label>
                         <button class="btn btn-primary" type="submit" @(ok ? "" : "disabled") title="@(ok ? "" : "Weights must total 100%")">Approve and lock</button></form>
-                    <form method="post" action="/approvals/return" class="flex gap-2 items-end">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" />
+                    <form method="post" action="~/approvals/return" class="flex gap-2 items-end">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" />
                         <label class="block flex-1"><span class="label text-ink-muted">Return with comments</span><input name="comment" class="mt-1" required /></label>
                         <button class="btn btn-secondary" type="submit">Return</button></form>
                 </div>
@@ -44,8 +44,8 @@
             <div class="card flex flex-wrap items-start justify-between gap-3" id="kra-@k.Id">
                 <div><div class="font-medium">@k.Person?.Name</div><div class="caption">@k.Person?.Position?.Title · requested @Fmt.Date(k.UnlockRequestedAt!.Value)</div><p class="mt-2">@k.UnlockReason</p></div>
                 <div class="flex gap-2">
-                    <form method="post" action="/approvals/unlock">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><button class="btn btn-secondary" type="submit">Unlock</button></form>
-                    <form method="post" action="/approvals/decline-unlock">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><button class="btn btn-ghost" type="submit">Keep locked</button></form>
+                    <form method="post" action="~/approvals/unlock">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><button class="btn btn-secondary" type="submit">Unlock</button></form>
+                    <form method="post" action="~/approvals/decline-unlock">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><button class="btn btn-ghost" type="submit">Keep locked</button></form>
                 </div>
             </div>
         }
@@ -72,10 +72,10 @@
             <tbody>
             @foreach (var k in locked)
             {
-                <tr id="kra-@k.Id"><td><a href="/kra/person/@k.Person?.Id" class="text-ink">@k.Person?.Name</a><div class="caption">@k.Person?.Position?.Title</div></td><td>v@(k.Version)</td><td class="caption">@k.ApprovedByName · @Fmt.Date(k.ApprovedAt!.Value)</td>
+                <tr id="kra-@k.Id"><td><a href="~/kra/person/@k.Person?.Id" class="text-ink">@k.Person?.Name</a><div class="caption">@k.Person?.Position?.Title</div></td><td>v@(k.Version)</td><td class="caption">@k.ApprovedByName · @Fmt.Date(k.ApprovedAt!.Value)</td>
                     <td class="flex gap-2 justify-end">
-                        <a class="btn btn-ghost btn-sm" href="/approvals?trail=@k.Id#trail">Change trail</a>
-                        <form method="post" action="/approvals/unlock" class="flex gap-2">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><input name="reason" placeholder="Reason" class="!w-40" required /><button class="btn btn-secondary btn-sm" type="submit">Unlock</button></form>
+                        <a class="btn btn-ghost btn-sm" href="~/approvals?trail=@k.Id#trail">Change trail</a>
+                        <form method="post" action="~/approvals/unlock" class="flex gap-2">@Html.AntiForgeryToken()<input type="hidden" name="kraId" value="@k.Id" /><input name="reason" placeholder="Reason" class="!w-40" required /><button class="btn btn-secondary btn-sm" type="submit">Unlock</button></form>
                     </td></tr>
             }
             </tbody>

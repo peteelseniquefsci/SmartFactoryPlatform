@@ -13,7 +13,7 @@
     </div>
     @if (Model.PendingApprovals > 0)
     {
-        <a class="btn btn-secondary" href="/approvals">@Model.PendingApprovals waiting in Approvals</a>
+        <a class="btn btn-secondary" href="~/approvals">@Model.PendingApprovals waiting in Approvals</a>
     }
 </div>
 
@@ -50,7 +50,7 @@
             {
                 <p class="mt-2"><partial name="_ModeBadge" model="Model.Mine.Kra" /></p>
             }
-            <a class="btn btn-secondary btn-sm mt-3" href="/week">Enter this week</a>
+            <a class="btn btn-secondary btn-sm mt-3" href="~/week">Enter this week</a>
         </div>
     </div>
     <div class="panel">
@@ -65,7 +65,7 @@
                     : statuses.Where(s => s != MonthStatus.None).All(s => s == MonthStatus.Met) ? MonthStatus.Met : MonthStatus.Open;
                 if (m.Index > thisMonth.Index) { status = MonthStatus.None; }
                 var fiscal = $"{Model.Half.Label} · {m.Year}";
-                <partial name="_MonthChip" model='((string)m.Label[..3], fiscal, status, m.Id == thisMonth.Id, (string?)$"/week?week={m.Weeks.First().Label}")' />
+                <partial name="_MonthChip" model='((string)m.Label[..3], fiscal, status, m.Id == thisMonth.Id, (string?)$"~/week?week={m.Weeks.First().Label}")' />
             }
         </div>
         @if (Model.Mine is not null)

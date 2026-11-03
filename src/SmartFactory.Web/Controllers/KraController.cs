@@ -72,7 +72,7 @@ public class KraController : Controller
         if (kra is null) return NotFound();
         await _kras.SubmitAsync(kra, user);
         TempData["Ok"] = "Submitted for approval. Your superior reviews the slots against the Top Goal lines and your position.";
-        return Redirect("/kra");
+        return Redirect(Url.Content("~/kra"));
     }
 
     [HttpPost("request-unlock")]
@@ -84,6 +84,6 @@ public class KraController : Controller
         if (kra is null) return NotFound();
         await _kras.RequestUnlockAsync(kra, user, reason);
         TempData["Ok"] = "Unlock requested. Your superior decides in Approvals.";
-        return Redirect("/kra");
+        return Redirect(Url.Content("~/kra"));
     }
 }

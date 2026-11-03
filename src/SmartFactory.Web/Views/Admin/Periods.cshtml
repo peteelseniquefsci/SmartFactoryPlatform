@@ -5,7 +5,7 @@
 <h1>Periods</h1>
 <p class="text-ink-muted mt-1">Fiscal year April–March, halves, months and ISO work weeks. A week belongs to the month holding its Thursday (rule 5.1). Calendars are generated, never typed.</p>
 <partial name="_Nav" />
-<form method="post" action="/admin/periods/create" class="card mt-6 flex flex-wrap gap-3 items-end">@Html.AntiForgeryToken()
+<form method="post" action="~/admin/periods/create" class="card mt-6 flex flex-wrap gap-3 items-end">@Html.AntiForgeryToken()
     <label class="block"><span class="label text-ink-muted">Fiscal year</span><input name="fiscalYear" type="number" value="@(Model.FirstOrDefault()?.FiscalYear + (Model.FirstOrDefault()?.Half == 2 ? 1 : 0) ?? 2026)" class="mt-1 !w-28" /></label>
     <label class="block"><span class="label text-ink-muted">Half</span><select name="half" class="mt-1 !w-24"><option value="1">1H</option><option value="2">2H</option></select></label>
     <label class="flex items-center gap-2 h-10"><input type="checkbox" name="makeCurrent" value="true" class="w-4 h-4" /> Make current</label>
@@ -15,7 +15,7 @@
 {
     <section class="panel mt-6">
         <div class="flex flex-wrap items-center justify-between gap-3"><h2>@h.Label <span class="caption">@Fmt.Date(h.StartDate) – @Fmt.Date(h.EndDate)</span></h2>
-            @if (h.IsCurrent) { <span class="chip chip-met">Current</span> } else { <form method="post" action="/admin/periods/current">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@h.Id" /><button class="btn btn-ghost btn-sm" type="submit">Make current</button></form> }</div>
+            @if (h.IsCurrent) { <span class="chip chip-met">Current</span> } else { <form method="post" action="~/admin/periods/current">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@h.Id" /><button class="btn btn-ghost btn-sm" type="submit">Make current</button></form> }</div>
         <div class="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
             @foreach (var m in h.Months)
             {

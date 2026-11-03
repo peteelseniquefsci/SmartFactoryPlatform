@@ -60,7 +60,7 @@ public class WeekController : Controller
         if (week is null) return NotFound();
         await _entry.SaveWeekAsync(kra, week, form.Rows.Select(r => new WeekEntry(r.SlotNumber, r.Actual, r.ManualTarget, r.Remark)), user);
         TempData["Ok"] = $"{week.Label} saved. Judgements and the month status are updated.";
-        return Redirect($"/week?week={week.Label}{(kra.PersonId == user.PersonId ? "" : $"&person={kra.PersonId}")}");
+        return Redirect(Url.Content($"~/week?week={week.Label}{(kra.PersonId == user.PersonId ? "" : $"&person={kra.PersonId}")}"));
     }
 
     [HttpPost("save-month")]
@@ -75,7 +75,7 @@ public class WeekController : Controller
         if (month is null) return NotFound();
         await _entry.SaveMonthAsync(kra, month, form.Rows.Select(r => new MonthEntry(r.SlotNumber, r.ManualActual, r.ManualRating, r.Remark)), user);
         TempData["Ok"] = $"Manual values for {month.Label} saved.";
-        return Redirect($"/week?week={form.ReturnWeek}{(kra.PersonId == user.PersonId ? "" : $"&person={kra.PersonId}")}");
+        return Redirect(Url.Content($"~/week?week={form.ReturnWeek}{(kra.PersonId == user.PersonId ? "" : $"&person={kra.PersonId}")}"));
     }
 
     [HttpPost("remark")]
@@ -94,6 +94,6 @@ public class WeekController : Controller
         if (ww is null || slot is null) return NotFound();
         if (!string.IsNullOrWhiteSpace(text)) await _entry.AddRemarkAsync(slot, ww, null, text, user);
         TempData["Ok"] = "Remark added.";
-        return Redirect($"/week?week={week}{(kra.PersonId == user.PersonId ? "" : $"&person={kra.PersonId}")}");
+        return Redirect(Url.Content($"~/week?week={week}{(kra.PersonId == user.PersonId ? "" : $"&person={kra.PersonId}")}"));
     }
 }

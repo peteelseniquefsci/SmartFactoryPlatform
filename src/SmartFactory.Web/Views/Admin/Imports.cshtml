@@ -10,14 +10,14 @@
         <h2>Position templates (JSON)</h2>
         <p class="caption mt-1">Format: <code>{ "positions": [ { "position": "Title", "slots": [ { "slot", "topGoal", "departmentalGoal", "departmentalMeasure", "sectionalGoal", "sectionalMeasure", "measure", "target", "weight", "basis", "aggregation", "rule", "start", "plans"[6], "notes" } ] } ] }</code>. Convert <code>_builders/spec.json</code> to this shape; the seed file <code>Seed/kra-templates.json</code> is a worked example.</p>
         <ul class="mt-3 caption">@foreach (var t in ViewBag.Templates) { <li>@t.Position · @t.Count slots</li> }</ul>
-        <form method="post" action="/admin/imports/templates" enctype="multipart/form-data" class="mt-4 flex flex-wrap gap-3 items-end">@Html.AntiForgeryToken()
+        <form method="post" action="~/admin/imports/templates" enctype="multipart/form-data" class="mt-4 flex flex-wrap gap-3 items-end">@Html.AntiForgeryToken()
             <label class="block flex-1"><span class="label text-ink-muted">JSON file</span><input type="file" name="file" accept=".json" class="mt-1" required /></label>
             <button class="btn btn-secondary" type="submit">Import templates</button></form>
     </section>
     <section class="panel">
         <h2>Weekly actuals (CSV)</h2>
         <p class="caption mt-1">Columns: <code>employee_id, slot, week, actual, source_row_id[, manual_target]</code>. Keyed by (slot, week); a row whose value is unchanged is logged as unchanged. A typed value is kept unless you tick overwrite. Register-fed values are marked with their source so a typed override needs a remark.</p>
-        <form method="post" action="/admin/imports/results" enctype="multipart/form-data" class="mt-4 grid gap-3 md:grid-cols-2 items-end">@Html.AntiForgeryToken()
+        <form method="post" action="~/admin/imports/results" enctype="multipart/form-data" class="mt-4 grid gap-3 md:grid-cols-2 items-end">@Html.AntiForgeryToken()
             <label class="block md:col-span-2"><span class="label text-ink-muted">CSV file</span><input type="file" name="file" accept=".csv,text/csv" class="mt-1" required /></label>
             <label class="block"><span class="label text-ink-muted">Half</span><select name="halfId" class="mt-1">@foreach (var h in halves) { <option value="@h.Id" selected="@h.IsCurrent">@h.Label</option> }</select></label>
             <label class="block"><span class="label text-ink-muted">Source</span><select name="source" class="mt-1"><option value="Imported">Imported (file)</option><option value="Register">Register</option></select></label>

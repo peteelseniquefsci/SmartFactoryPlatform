@@ -28,7 +28,7 @@
     {
         <div class="flash flash-error" role="alert">@err</div>
     }
-    <form method="post" action="/account/sign-in" class="panel space-y-4">
+    <form method="post" action="~/account/sign-in" class="panel space-y-4">
         @Html.AntiForgeryToken()
         <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
         @if (isDev && people is not null)

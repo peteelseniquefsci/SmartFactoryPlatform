@@ -30,7 +30,7 @@ else
                 var wk = main?.Week(Model.Week.Label);
                 var late = r.Kra.Version == 0 && DateOnly.FromDateTime(DateTime.Today) > firstWeekEnd;
                 <tr>
-                    <td><a href="/week?week=@Model.Week.Label&person=@p.Id" class="font-medium text-ink">@p.Name</a><div class="caption">@p.Position?.Title · @p.Position?.Section?.Name</div></td>
+                    <td><a href="~/week?week=@Model.Week.Label&person=@p.Id" class="font-medium text-ink">@p.Name</a><div class="caption">@p.Position?.Title · @p.Position?.Section?.Name</div></td>
                     <td><partial name="_ModeBadge" model="r.Kra" />
                         @if (r.Kra.Status == ApprovalStatus.Submitted) {<div class="mt-1"><span class="chip chip-open">Waiting for approval</span></div>}
                         @if (late) {<div class="mt-1"><span class="chip chip-unmet">No version locked</span></div>}
@@ -39,7 +39,7 @@ else
                     @foreach (var m in months)
                     {
                         var t = monthly.MonthTotals.First(x => x.Month.Index == m.Index);
-                        <td class="text-center"><a href="/kra/person/@p.Id" class="no-underline"><partial name="_Rating" model="(t.Total, 2, t.Provisional)" /></a></td>
+                        <td class="text-center"><a href="~/kra/person/@p.Id" class="no-underline"><partial name="_Rating" model="(t.Total, 2, t.Provisional)" /></a></td>
                     }
                     <td class="text-center"><partial name="_Rating" model="(monthly.HalfPerformance, 2, false)" /></td>
                 </tr>

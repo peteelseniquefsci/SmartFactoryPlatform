@@ -43,7 +43,7 @@ public class ApprovalsController : Controller
         var kra = await _kras.LoadAsync(kraId); if (kra is null) return NotFound();
         await _kras.ApproveAndLockAsync(kra, user, note);
         TempData["Ok"] = $"{kra.Person?.Name}'s KRA is approved and LOCKED as version {kra.Version}.";
-        return Redirect("/approvals");
+        return Redirect(Url.Content("~/approvals"));
     }
 
     [HttpPost("return")]
@@ -54,7 +54,7 @@ public class ApprovalsController : Controller
         var kra = await _kras.LoadAsync(kraId); if (kra is null) return NotFound();
         await _kras.ReturnAsync(kra, user, comment);
         TempData["Ok"] = $"Returned to {kra.Person?.Name} with your comments.";
-        return Redirect("/approvals");
+        return Redirect(Url.Content("~/approvals"));
     }
 
     [HttpPost("unlock")]
@@ -65,7 +65,7 @@ public class ApprovalsController : Controller
         var kra = await _kras.LoadAsync(kraId); if (kra is null) return NotFound();
         await _kras.UnlockAsync(kra, user, reason);
         TempData["Ok"] = $"{kra.Person?.Name}'s KRA is back in SETUP. The next lock creates version {kra.Version + 1}.";
-        return Redirect("/approvals");
+        return Redirect(Url.Content("~/approvals"));
     }
 
     [HttpPost("decline-unlock")]
@@ -79,6 +79,6 @@ public class ApprovalsController : Controller
         kra.Status = ApprovalStatus.Approved;
         await _kras.LockAsSystemNoVersionAsync(kra);
         TempData["Ok"] = "Unlock request declined.";
-        return Redirect("/approvals");
+        return Redirect(Url.Content("~/approvals"));
     }
 }

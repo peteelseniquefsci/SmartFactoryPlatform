@@ -11,4 +11,4 @@
     <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Entity</th><th>Field</th><th>Old</th><th>New</th><th>Detail</th></tr></thead>
     <tbody>@foreach (var a in Model) { <tr><td class="whitespace-nowrap text-ink">@a.At.ToString("dd MMM yyyy HH:mm:ss")</td><td>@a.ActorName</td><td>@a.Action</td><td>@a.Entity @a.EntityId</td><td>@a.Field</td><td>@a.OldValue</td><td class="text-ink">@a.NewValue</td><td>@a.Detail</td></tr> }</tbody>
 </table></div>
-<div class="mt-4 flex gap-2">@if (page > 1) { <a class="btn btn-ghost btn-sm" href="/admin/audit?entity=@entity&page=@(page - 1)">Newer</a> }@if (Model.Count == 100) { <a class="btn btn-ghost btn-sm" href="/admin/audit?entity=@entity&page=@(page + 1)">Older</a> }</div>
+<div class="mt-4 flex gap-2">@if (page > 1) { <a class="btn btn-ghost btn-sm" href="~/admin/audit?entity=@entity&page=@(page - 1)">Newer</a> }@if (Model.Count == 100) { <a class="btn btn-ghost btn-sm" href="~/admin/audit?entity=@entity&page=@(page + 1)">Older</a> }</div>
